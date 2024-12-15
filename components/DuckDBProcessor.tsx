@@ -4,12 +4,8 @@ import React, { useState, useEffect } from "react";
 import FileReader from "@/components/FileReader";
 import { Button } from "@/components/ui/button";
 import { DuckDBConfig } from "@duckdb/duckdb-wasm";
-import {
-  initializeDuckDb,
-  insertFile,
-  runQuery,
-  useDuckDb,
-} from "duckdb-wasm-kit";
+import * as duckdb from "@duckdb/duckdb-wasm";
+import { initializeDuckDb, runQuery, useDuckDb } from "duckdb-wasm-kit";
 
 export default function DuckDBProcessor() {
   useEffect(() => {
@@ -23,7 +19,7 @@ export default function DuckDBProcessor() {
 
   const { db } = useDuckDb();
   const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,14 +38,19 @@ export default function DuckDBProcessor() {
 
     try {
       // Register the file with DuckDB
-      await insertFile(db, file, file.name);
+      await db.registerFileHandle(
+        file.name,
+        file,
+        duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
+        true
+      );
       // Query the file
       const query = `SELECT * FROM '${file.name}' LIMIT 10`;
       console.log("Running query:", query);
       const result = await runQuery(db, query);
 
       // Convert the result to a string for display
-      setResult(JSON.stringify(result, null, 2));
+      setResult(result);
       console.log(result);
     } catch (err) {
       console.error("Error processing file:", err);
@@ -74,14 +75,7 @@ export default function DuckDBProcessor() {
           {error}
         </div>
       )}
-      {result && (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold mb-2">Query Result:</h3>
-          <pre className="bg-gray-100 p-4 rounded overflow-x-auto">
-            {result}
-          </pre>
-        </div>
-      )}
+      {result && <div>Check console for result!</div>}
     </div>
   );
 }
