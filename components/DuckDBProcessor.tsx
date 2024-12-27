@@ -14,7 +14,7 @@ export default function DuckDBProcessor() {
         castBigIntToDouble: true,
       },
     };
-    initializeDuckDb({ config, debug: true });
+    initializeDuckDb({ config, debug: false });
   }, []);
 
   const { db } = useDuckDb();
@@ -50,8 +50,8 @@ export default function DuckDBProcessor() {
       const result = await runQuery(db, query);
 
       // Convert the result to a string for display
-      setResult(result);
-      console.log(result);
+      setResult(JSON.parse(result.toString()));
+      console.log(JSON.parse(result.toString()));
     } catch (err) {
       console.error("Error processing file:", err);
       setError(
@@ -75,6 +75,7 @@ export default function DuckDBProcessor() {
           {error}
         </div>
       )}
+      {loading && <div>Loading...</div>}
       {result && <div>Check console for result!</div>}
     </div>
   );
