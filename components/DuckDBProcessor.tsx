@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DuckDBConfig } from "@duckdb/duckdb-wasm";
 import * as duckdb from "@duckdb/duckdb-wasm";
 import { initializeDuckDb, runQuery, useDuckDb } from "duckdb-wasm-kit";
+import PyodidePandas from "./PyodidePandas";
 
 export default function DuckDBProcessor() {
   useEffect(() => {
@@ -20,6 +21,7 @@ export default function DuckDBProcessor() {
   const { db } = useDuckDb();
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<any>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,7 +78,12 @@ export default function DuckDBProcessor() {
         </div>
       )}
       {loading && <div>Loading...</div>}
-      {result && <div>Check console for result!</div>}
+      {result && (
+        <div>
+          Check console for result!
+          <PyodidePandas data={result} />
+        </div>
+      )}
     </div>
   );
 }

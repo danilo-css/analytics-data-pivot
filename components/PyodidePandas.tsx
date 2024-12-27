@@ -13,7 +13,7 @@ declare global {
 
 const PYODIDE_VERSION = "0.26.4";
 
-const PyodidePandas: React.FC = () => {
+export default function PyodidePandas({ data }: { data: any }) {
   const [pyodide, setPyodide] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [result, setResult] = useState<string>("");
@@ -59,22 +59,18 @@ const PyodidePandas: React.FC = () => {
     try {
       setLoading(true);
 
+      console.log(data);
+
+      pyodide.globals.set("js_data", data);
+
       // Example data
       const pythonCode = `
-        # Create a sample DataFrame
-        df = pd.DataFrame({
-          'A': [1, 2, 3, 4, 10000],
-          'B': [10, 20, 30, 40, 50],
-          'C': ['a', 'b', 'c', 'd', 'e']
-        })
-
-        # Perform some operations
-        summary = df.describe()
-        mean_values = df.mean(numeric_only=True)
+        print(js_data.to_py())
+        df = pd.json_normalize(js_data.to_py())
         
         # Convert results to HTML for display
         result_html = f"""
-        {df.transpose().to_html()}
+        {df.to_html()}
         """
         result_html
       `;
@@ -124,6 +120,4 @@ const PyodidePandas: React.FC = () => {
       </CardContent>
     </Card>
   );
-};
-
-export default PyodidePandas;
+}
