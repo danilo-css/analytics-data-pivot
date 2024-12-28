@@ -9,9 +9,11 @@ import FileManager from "./FileManager";
 import { useFileStore } from "@/stores/useFileStore";
 import { useDuckDBStore } from "@/stores/useDuckDBStore";
 import InitWasm from "./InitWasm";
+import { usePyodideStore } from "@/stores/usePyodideStore";
 
 export default function DuckDBProcessor() {
   const { db } = useDuckDBStore();
+  const { pyodide } = usePyodideStore();
   const { files } = useFileStore();
   const [result, setResult] = useState<any>(null);
 
@@ -56,8 +58,8 @@ export default function DuckDBProcessor() {
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
       <InitWasm />
-      <FileManager />
-      {files && db && (
+      {pyodide && db && <FileManager />}
+      {files.length > 0 && db && (
         <Button onClick={processFile} className="mt-4" disabled={loading}>
           {loading ? "Processing..." : "Process File with DuckDB"}
         </Button>
