@@ -1,25 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { DuckDBConfig } from "@duckdb/duckdb-wasm";
 import * as duckdb from "@duckdb/duckdb-wasm";
-import { initializeDuckDb, runQuery, useDuckDb } from "duckdb-wasm-kit";
+import { runQuery } from "duckdb-wasm-kit";
 import PyodidePandas from "./PyodidePandas";
 import FileManager from "./FileManager";
 import { useFileStore } from "@/stores/useFileStore";
+import { useDuckDBStore } from "@/stores/useDuckDBStore";
+import InitWasm from "./InitWasm";
 
 export default function DuckDBProcessor() {
-  useEffect(() => {
-    const config: DuckDBConfig = {
-      query: {
-        castBigIntToDouble: true,
-      },
-    };
-    initializeDuckDb({ config, debug: false });
-  }, []);
-
-  const { db } = useDuckDb();
+  const { db } = useDuckDBStore();
   const { files } = useFileStore();
   const [result, setResult] = useState<any>(null);
 
@@ -63,6 +55,7 @@ export default function DuckDBProcessor() {
 
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+      <InitWasm />
       <FileManager />
       {files && db && (
         <Button onClick={processFile} className="mt-4" disabled={loading}>
