@@ -7,6 +7,8 @@ type DuckDBStore = {
   loadingduckdb: boolean;
   errorduckdb: Error | null;
   initializeDuckDB: () => Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  runQuery: (db: AsyncDuckDB, sql: string) => Promise<any>;
 };
 
 export const useDuckDBStore = create<DuckDBStore>((set) => ({
@@ -32,5 +34,11 @@ export const useDuckDBStore = create<DuckDBStore>((set) => ({
     } catch (errorduckdb) {
       set({ errorduckdb: errorduckdb as Error, loadingduckdb: false });
     }
+  },
+  runQuery: async (db, sql) => {
+    const conn = await db.connect();
+    const arrow = await conn.query(sql);
+    await conn.close();
+    return arrow;
   },
 }));
