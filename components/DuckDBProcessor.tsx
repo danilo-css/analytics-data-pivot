@@ -1,56 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { DuckDBConfig } from "@duckdb/duckdb-wasm";
-import * as duckdb from "@duckdb/duckdb-wasm";
-import { initializeDuckDb, runQuery, useDuckDb } from "duckdb-wasm-kit";
-import PyodidePandas from "./PyodidePandas";
+import React, { useEffect, useState } from "react";
 import FileManager from "./FileManager";
 import { useFileStore } from "@/stores/useFileStore";
+import { useDuckDBStore } from "@/stores/useDuckDBStore";
+import InitWasm from "./InitWasm";
+import { usePyodideStore } from "@/stores/usePyodideStore";
+import { useTableStore } from "@/stores/useTableStore";
+import FieldSelection from "./FieldSelection";
 
 export default function DuckDBProcessor() {
-  useEffect(() => {
-    const config: DuckDBConfig = {
-      query: {
-        castBigIntToDouble: true,
-      },
-    };
-    initializeDuckDb({ config, debug: false });
-  }, []);
-
-  const { db } = useDuckDb();
+  const { db, runQuery } = useDuckDBStore();
+  const { pyodide } = usePyodideStore();
   const { files } = useFileStore();
-  const [result, setResult] = useState<any>(null);
+  const { setQueryFieldsFromFiles } = useTableStore();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const processFile = async () => {
+  useEffect(() => {
     if (!files || !db) return;
 
     setLoading(true);
-    setResult(null);
     setError(null);
 
     try {
-      for (const file of Object.values(files)) {
-        // Register the file with DuckDB
-        await db.registerFileHandle(
-          file.name,
-          file,
-          duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
-          true
-        );
-        // Query the file
-        const query = `SELECT * FROM '${file.name}' LIMIT 10`;
-        console.log("Running query:", query);
-        const result = await runQuery(db, query);
-
-        // Convert the result to a string for display
-        setResult(JSON.parse(result.toString()));
-        console.log(JSON.parse(result.toString()));
-      }
+      setQueryFieldsFromFiles(files, db, runQuery);
     } catch (err) {
       console.error("Error processing file:", err);
       setError(
@@ -59,28 +34,19 @@ export default function DuckDBProcessor() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [files]);
 
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <FileManager />
-      {files && db && (
-        <Button onClick={processFile} className="mt-4" disabled={loading}>
-          {loading ? "Processing..." : "Process File with DuckDB"}
-        </Button>
-      )}
+      <InitWasm />
+      {pyodide && db && <FileManager />}
+      {files.length > 0 && db && <FieldSelection />}
       {error && (
         <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
         </div>
       )}
       {loading && <div>Loading...</div>}
-      {result && (
-        <div>
-          Check console for result!
-          <PyodidePandas data={result} />
-        </div>
-      )}
     </div>
   );
 }

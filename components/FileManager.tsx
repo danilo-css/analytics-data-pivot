@@ -31,12 +31,6 @@ export default function FileManager() {
     fileInputRef.current?.click();
   };
 
-  console.log("Files:", files);
-  console.log(
-    "File names:",
-    files.map((file) => file.name)
-  );
-
   return (
     <div className="space-y-4">
       <div className="mb-4">
