@@ -13,6 +13,7 @@ type TableState = {
   clearResults: (tableName: string) => void;
   queryFields: Record<string, FieldsType[]>;
   setQueryFields: (tableName: string, fields: FieldsType[]) => void;
+  clearQueryFields: (tableName: string) => void;
   setQueryFieldsFromFiles: (
     files: File[],
     db: AsyncDuckDB,
@@ -58,10 +59,16 @@ export const useTableStore = create<TableState>((set) => ({
         )
         .map((field: { name: string; type: string }) => ({
           name: field.name,
-          type: field.type,
+          type: field.type.toString(),
         }));
 
       store.setQueryFields(file.name, fields);
     }
   },
+  clearQueryFields: (tableName) =>
+    set((state) => {
+      const newFields = { ...state.queryFields };
+      delete newFields[tableName];
+      return { queryFields: newFields };
+    }),
 }));

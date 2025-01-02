@@ -13,9 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTableStore } from "@/stores/useTableStore";
 
 export default function FileManager() {
   const { files, addFile, removeFile } = useFileStore();
+  const { clearQueryFields } = useTableStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +69,10 @@ export default function FileManager() {
                 <TableCell>
                   <Button
                     variant="destructive"
-                    onClick={() => removeFile(file.name)}
+                    onClick={() => {
+                      removeFile(file.name);
+                      clearQueryFields(file.name);
+                    }}
                   >
                     Remove
                   </Button>
