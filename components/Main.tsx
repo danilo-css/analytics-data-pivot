@@ -8,6 +8,7 @@ import InitWasm from "./InitWasm";
 import { usePyodideStore } from "@/stores/usePyodideStore";
 import { useTableStore } from "@/stores/useTableStore";
 import FieldSelection from "./FieldSelection";
+import PivotFields from "./PivotFields";
 
 export default function Main() {
   const { db, runQuery } = useDuckDBStore();
@@ -53,9 +54,9 @@ export default function Main() {
 
         {files.length > 0 && db && <FieldSelection />}
       </section>
-      <section className="relative h-[350px] w-full md:h-full"></section>
-
-      <div className="justify-self-start max-w-2xl mx-auto mt-8 p-6 rounded-lg shadow-md"></div>
+      <section className="relative h-[350px] w-full md:h-full items-center justify-center">
+        <PivotFields />
+      </section>
     </main>
   );
 }

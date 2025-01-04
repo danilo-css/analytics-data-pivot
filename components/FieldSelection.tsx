@@ -11,12 +11,14 @@ import {
 import { Badge } from "./ui/badge";
 import { TbNumber123 } from "react-icons/tb";
 import { PiTextAaFill } from "react-icons/pi";
-import { Columns3, Filter, Rows3, SquareSigma } from "lucide-react";
+import { Columns3, Database, Filter, Rows3, SquareSigma } from "lucide-react";
 import { useFileStore } from "@/stores/useFileStore";
+import { usePivotStore } from "@/stores/usePivotStore";
 
 export default function FieldSelection() {
   const { queryFields, setQueryFields } = useTableStore();
   const { files } = useFileStore();
+  const { addRow, addColumn } = usePivotStore();
 
   const handleTypeChange = (parentKey: string, itemIndex: number) => {
     const updatedFields = [...queryFields[parentKey]];
@@ -27,13 +29,21 @@ export default function FieldSelection() {
 
   return (
     <Accordion type="single" collapsible>
-      {files?.map((parentKey: File) => (
+      {files?.map((parentKey: File, index: number) => (
         <AccordionItem
           key={parentKey.name}
           value={parentKey.name}
           className="w-full border px-4 rounded-lg"
         >
-          <AccordionTrigger>{parentKey.name}</AccordionTrigger>
+          <AccordionTrigger className="flex flex-row">
+            <div className="relative">
+              <Database />
+              <span className="absolute -bottom-[6px] -right-[6px] text-xs bg-black px-1 rounded-md">
+                {index}
+              </span>
+            </div>
+            <div>{parentKey.name}</div>
+          </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-1 overflow-y-auto max-h-[400px]">
             {queryFields[parentKey.name]?.map((item, index) => (
               <Badge
@@ -61,10 +71,12 @@ export default function FieldSelection() {
                         <Rows3
                           size={20}
                           className="cursor-pointer hover:text-blue-500"
+                          onClick={() => addRow(parentKey.name, item.name)}
                         />
                         <Columns3
                           size={20}
                           className="cursor-pointer hover:text-blue-500"
+                          onClick={() => addColumn(parentKey.name, item.name)}
                         />
                         <Filter
                           size={20}

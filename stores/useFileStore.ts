@@ -10,7 +10,9 @@ export const useFileStore = create<FileStoreType>((set) => ({
   files: [],
   addFile: (file: File) =>
     set((state) => ({
-      files: [...state.files, file],
+      files: state.files.some((f) => f.name === file.name)
+        ? state.files
+        : [...state.files, file],
     })),
   removeFile: (fileName: string) =>
     set((state) => ({
