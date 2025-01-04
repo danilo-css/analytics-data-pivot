@@ -9,7 +9,7 @@ import { usePyodideStore } from "@/stores/usePyodideStore";
 import { useTableStore } from "@/stores/useTableStore";
 import FieldSelection from "./FieldSelection";
 
-export default function DuckDBProcessor() {
+export default function Main() {
   const { db, runQuery } = useDuckDBStore();
   const { pyodide } = usePyodideStore();
   const { files } = useFileStore();
@@ -37,16 +37,25 @@ export default function DuckDBProcessor() {
   }, [files]);
 
   return (
-    <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <InitWasm />
-      {pyodide && db && <FileManager />}
-      {files.length > 0 && db && <FieldSelection />}
-      {error && (
-        <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+    <main className="relative md:absolute flex flex-col md:flex-row items-center md:items-start justify-center h-full w-full">
+      <section className="relative md:w-fit w-full md:h-full flex-shrink-0">
+        <div className="flex flex-col items-center border rounded-lg py-4 px-4">
+          <h1 className="font-bold">File manager</h1>
+          <InitWasm />
+          {pyodide && db && <FileManager />}
+          {loading && <div>Loading...</div>}
+          {error && (
+            <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
         </div>
-      )}
-      {loading && <div>Loading...</div>}
-    </div>
+
+        {files.length > 0 && db && <FieldSelection />}
+      </section>
+      <section className="relative h-[350px] w-full md:h-full"></section>
+
+      <div className="justify-self-start max-w-2xl mx-auto mt-8 p-6 rounded-lg shadow-md"></div>
+    </main>
   );
 }

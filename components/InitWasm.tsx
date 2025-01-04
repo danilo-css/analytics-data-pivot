@@ -16,7 +16,7 @@ export default function InitWasm() {
   }, []);
 
   return (
-    <>
+    <div>
       {loadingduckdb && (
         <div className="flex flex-row items-center">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -53,6 +53,6 @@ export default function InitWasm() {
           <p>Error initializing Pyodide: {errorpyodide.message}</p>
         </div>
       )}
-    </>
+    </div>
   );
 }

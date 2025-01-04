@@ -4,15 +4,6 @@ import React, { useRef } from "react";
 import { useFileStore } from "@/stores/useFileStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useTableStore } from "@/stores/useTableStore";
 
 export default function FileManager() {
@@ -35,13 +26,7 @@ export default function FileManager() {
 
   return (
     <div className="space-y-4">
-      <div className="mb-4">
-        <Label
-          htmlFor="file-upload"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Choose a CSV, Excel, or Parquet file
-        </Label>
+      <div className="flex flex-col items-center">
         <Input
           id="file-upload"
           type="file"
@@ -53,34 +38,33 @@ export default function FileManager() {
         <Button onClick={handleButtonClick} className="mt-2">
           Select File
         </Button>
+        <p className="text-xs">.parquet, .xlsx or .csv</p>
       </div>
       {files.length > 0 && (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>File Name</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {files.map((file) => (
-              <TableRow key={file.name}>
-                <TableCell>{file.name}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      removeFile(file.name);
-                      clearQueryFields(file.name);
-                    }}
-                  >
-                    Remove
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ul className="space-y-2">
+          {files.map((file) => (
+            <li
+              key={file.name}
+              className="flex justify-between items-center p-2 border rounded"
+            >
+              <span
+                className="text-ellipsis overflow-hidden w-[200px] text-xs"
+                title={file.name}
+              >
+                {file.name}
+              </span>
+              <Button
+                onClick={() => {
+                  removeFile(file.name);
+                  clearQueryFields(file.name);
+                }}
+                className="bg-red-600 hover:bg-red-800"
+              >
+                Remove
+              </Button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
