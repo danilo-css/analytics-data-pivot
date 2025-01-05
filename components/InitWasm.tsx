@@ -26,7 +26,7 @@ export default function InitWasm() {
       {db && (
         <div className="flex flex-row items-center">
           <CircleCheck color="#008a35" className="mr-2 h-4 w-4" />
-          <p>DuckDB initialized succesfully.</p>
+          <p>DuckDB initialized</p>
         </div>
       )}
       {errorduckdb && (
@@ -44,7 +44,7 @@ export default function InitWasm() {
       {pyodide && (
         <div className="flex flex-row items-center">
           <CircleCheck color="#008a35" className="mr-2 h-4 w-4" />
-          <p>Pyodide initialized succesfully.</p>
+          <p>Pyodide initialized</p>
         </div>
       )}
       {errorpyodide && (

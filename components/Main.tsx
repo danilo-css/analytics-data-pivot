@@ -41,7 +41,6 @@ export default function Main() {
     <main className="relative md:absolute flex flex-col md:flex-row items-center md:items-start justify-center h-full w-full">
       <section className="relative md:w-fit w-full md:h-full flex-shrink-0">
         <div className="flex flex-col items-center border rounded-lg py-4 px-4">
-          <h1 className="font-bold">File manager</h1>
           <InitWasm />
           {pyodide && db && <FileManager />}
           {loading && <div>Loading...</div>}
