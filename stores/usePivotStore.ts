@@ -10,6 +10,12 @@ type columnType = {
   table: string;
 };
 
+type aggregationType = {
+  name?: string;
+  table?: string;
+  type?: "SUM" | "AVG" | "MIN" | "MAX";
+};
+
 export type PivotState = {
   rows: rowType[];
   setRows: (table: string, rows: string[]) => void;
@@ -23,6 +29,13 @@ export type PivotState = {
   clearColumn: (table: string, column: string) => void;
   clearColumns: () => void;
   clearFileColumns: (table?: string) => void;
+  aggregation: aggregationType;
+  setAggregation: (
+    table: string,
+    aggregation: string,
+    type: "SUM" | "AVG" | "MIN" | "MAX"
+  ) => void;
+  clearAggregation: () => void;
 };
 
 export const usePivotStore = create<PivotState>((set) => ({
@@ -94,4 +107,15 @@ export const usePivotStore = create<PivotState>((set) => ({
     set((state) => ({
       columns: table ? state.columns.filter((c) => c.table !== table) : [],
     })),
+  aggregation: {},
+  setAggregation: (table, name, type) => {
+    set(() => ({
+      aggregation: {
+        table: table,
+        name: name,
+        type: type,
+      },
+    }));
+  },
+  clearAggregation: () => set({ aggregation: {} }),
 }));

@@ -1,7 +1,7 @@
 import { usePivotStore } from "@/stores/usePivotStore";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Database, Trash2 } from "lucide-react";
+import { Database, Rows3, Trash2 } from "lucide-react";
 import { useFileStore } from "@/stores/useFileStore";
 
 export default function PivotRows() {
@@ -10,7 +10,10 @@ export default function PivotRows() {
 
   return (
     <div className="flex flex-row items-center gap-3 border rounded-lg justify-between px-4 py-1">
-      <div className="w-4">Rows</div>
+      <div className="flex flex-row items-center gap-1">
+        <Rows3 size={20} />
+        <p>Rows</p>
+      </div>
       <div className="flex flex-row flex-wrap items-center gap-2">
         {rows.map((row, index) => (
           <div key={index} className="flex flex-col items-center gap-2">

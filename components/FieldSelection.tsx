@@ -18,7 +18,7 @@ import { usePivotStore } from "@/stores/usePivotStore";
 export default function FieldSelection() {
   const { queryFields, setQueryFields } = useTableStore();
   const { files } = useFileStore();
-  const { addRow, addColumn } = usePivotStore();
+  const { addRow, addColumn, setAggregation } = usePivotStore();
 
   const handleTypeChange = (parentKey: string, itemIndex: number) => {
     const updatedFields = [...queryFields[parentKey]];
@@ -96,6 +96,9 @@ export default function FieldSelection() {
                         <SquareSigma
                           size={20}
                           className="cursor-pointer hover:text-black"
+                          onClick={() =>
+                            setAggregation(parentKey.name, item.name, "SUM")
+                          }
                         />
                       </>
                     )}
