@@ -16,11 +16,13 @@ export type PivotState = {
   addRow: (table: string, row: string) => void;
   clearRow: (table: string, row: string) => void;
   clearRows: () => void;
+  clearFileRows: (table?: string) => void;
   columns: columnType[];
   setColumns: (table: string, columns: string[]) => void;
   addColumn: (table: string, column: string) => void;
   clearColumn: (table: string, column: string) => void;
   clearColumns: () => void;
+  clearFileColumns: (table?: string) => void;
 };
 
 export const usePivotStore = create<PivotState>((set) => ({
@@ -53,6 +55,10 @@ export const usePivotStore = create<PivotState>((set) => ({
     }));
   },
   clearRows: () => set({ rows: [] }),
+  clearFileRows: (table) =>
+    set((state) => ({
+      rows: table ? state.rows.filter((r) => r.table !== table) : [],
+    })),
   columns: [],
   setColumns: (table, columns) =>
     set((state) => ({
@@ -84,4 +90,8 @@ export const usePivotStore = create<PivotState>((set) => ({
     }));
   },
   clearColumns: () => set({ columns: [] }),
+  clearFileColumns: (table) =>
+    set((state) => ({
+      columns: table ? state.columns.filter((c) => c.table !== table) : [],
+    })),
 }));

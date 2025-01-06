@@ -5,10 +5,12 @@ import { useFileStore } from "@/stores/useFileStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTableStore } from "@/stores/useTableStore";
+import { usePivotStore } from "@/stores/usePivotStore";
 
 export default function FileManager() {
   const { files, addFile, removeFile } = useFileStore();
   const { clearQueryFields } = useTableStore();
+  const { clearFileRows, clearFileColumns } = usePivotStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,6 +59,8 @@ export default function FileManager() {
                 onClick={() => {
                   removeFile(file.name);
                   clearQueryFields(file.name);
+                  clearFileRows(file.name);
+                  clearFileColumns(file.name);
                 }}
               >
                 Remove
