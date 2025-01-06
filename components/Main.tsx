@@ -9,6 +9,9 @@ import { usePyodideStore } from "@/stores/usePyodideStore";
 import { useTableStore } from "@/stores/useTableStore";
 import FieldSelection from "./FieldSelection";
 import PivotFields from "./PivotFields";
+import { Play } from "lucide-react";
+import BuildQuery from "@/lib/BuildQuery";
+import { useQueryStore } from "@/stores/useQueryStore";
 
 export default function Main() {
   const { db, runQuery } = useDuckDBStore();
@@ -38,7 +41,7 @@ export default function Main() {
   }, [files]);
 
   return (
-    <main className="relative md:absolute flex flex-col md:flex-row items-center md:items-start justify-center h-full w-full">
+    <main className="relative md:absolute flex flex-col md:flex-row items-center md:items-start justify-center h-full w-full gap-1 py-1 px-1">
       <section className="relative md:w-fit w-full md:h-full flex-shrink-0">
         <div className="flex flex-col items-center border rounded-lg py-4 px-4">
           <InitWasm />
@@ -53,8 +56,14 @@ export default function Main() {
 
         {files.length > 0 && db && <FieldSelection />}
       </section>
-      <section className="relative h-[350px] w-full md:h-full items-center justify-center">
-        <PivotFields />
+      <section className="relative w-full md:h-full items-center justify-center">
+        <div className="flex flex-col gap-1">
+          <PivotFields />
+          <div className="flex flex-row cursor-pointer gap-1 py-1 px-2 border rounded-md w-fit">
+            <Play size={20} />
+            <p>Run query</p>
+          </div>
+        </div>
       </section>
     </main>
   );

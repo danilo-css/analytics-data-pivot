@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Aggregation from "./pivotfields/Aggregation";
 import PivotColumns from "./pivotfields/PivotColumns";
 import PivotRows from "./pivotfields/PivotRows";

@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { usePyodideStore } from "@/stores/usePyodideStore";
 
 declare global {
   interface Window {
@@ -11,47 +13,11 @@ declare global {
   }
 }
 
-const PYODIDE_VERSION = "0.26.4";
-
 export default function PyodidePandas({ data }: { data: any }) {
-  const [pyodide, setPyodide] = useState<any>(null);
+  const { pyodide } = usePyodideStore();
   const [loading, setLoading] = useState<boolean>(true);
   const [result, setResult] = useState<string>("");
   const [error, setError] = useState<string>("");
-
-  useEffect(() => {
-    const initPyodide = async () => {
-      try {
-        // Load Pyodide script
-        const script = document.createElement("script");
-        script.src = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/pyodide.js`;
-        script.async = true;
-        document.body.appendChild(script);
-
-        script.onload = async () => {
-          // Initialize Pyodide
-          const pyodideInstance = await window.loadPyodide({
-            indexURL: `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`,
-          });
-
-          // Install and import pandas
-          await pyodideInstance.loadPackage("pandas");
-          await pyodideInstance.runPythonAsync(`
-            import pandas as pd
-            import js
-          `);
-
-          setPyodide(pyodideInstance);
-          setLoading(false);
-        };
-      } catch (err) {
-        setError("Failed to initialize Pyodide: " + err);
-        setLoading(false);
-      }
-    };
-
-    initPyodide();
-  }, []);
 
   const runPandasOperation = async () => {
     if (!pyodide) return;
