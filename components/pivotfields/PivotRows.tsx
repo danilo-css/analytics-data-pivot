@@ -10,7 +10,7 @@ export default function PivotRows() {
 
   return (
     <div className="flex flex-row items-center gap-3 border rounded-lg justify-between px-4 py-1">
-      <div>Rows</div>
+      <div className="w-4">Rows</div>
       <div className="flex flex-row flex-wrap items-center gap-2">
         {rows.map((row, index) => (
           <div key={index} className="flex flex-col items-center gap-2">
@@ -23,7 +23,7 @@ export default function PivotRows() {
               </div>
               <div>{row.name}</div>
               <Trash2
-                className="cursor-pointer hover:text-blue-500"
+                className="cursor-pointer hover:text-black"
                 size={20}
                 onClick={() => clearRow(row.table, row.name)}
               />

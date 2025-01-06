@@ -58,7 +58,6 @@ export default function FileManager() {
                   removeFile(file.name);
                   clearQueryFields(file.name);
                 }}
-                className="bg-red-600 hover:bg-red-800"
               >
                 Remove
               </Button>

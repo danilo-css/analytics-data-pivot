@@ -10,10 +10,10 @@ export default function PivotColumns() {
 
   return (
     <div className="flex flex-row items-center gap-3 border rounded-lg justify-between px-4 py-1">
-      <div>Columns</div>
+      <div className="w-4">Columns</div>
       <div className="flex flex-row flex-wrap items-center gap-2">
         {columns.map((column, index) => (
-          <div key={index} className="flex flex-col items-center gap-2">
+          <div key={index} className="flex flex-col items-start gap-2">
             <Badge className="flex flex-row items-center gap-2">
               <div className="relative">
                 <Database size={16} />
@@ -23,7 +23,7 @@ export default function PivotColumns() {
               </div>
               <div>{column.name}</div>
               <Trash2
-                className="cursor-pointer hover:text-blue-500"
+                className="cursor-pointer hover:text-black"
                 size={20}
                 onClick={() => clearColumn(column.table, column.name)}
               />

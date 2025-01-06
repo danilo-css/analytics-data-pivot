@@ -65,22 +65,22 @@ export default function FieldSelection() {
                           onClick={() =>
                             handleTypeChange(parentKey.name, index)
                           }
-                          className="cursor-pointer"
+                          className="cursor-pointer hover:text-black"
                           title="Current format: Text. Click to change to number."
                         />
                         <Rows3
                           size={20}
-                          className="cursor-pointer hover:text-blue-500"
+                          className="cursor-pointer hover:text-black"
                           onClick={() => addRow(parentKey.name, item.name)}
                         />
                         <Columns3
                           size={20}
-                          className="cursor-pointer hover:text-blue-500"
+                          className="cursor-pointer hover:text-black"
                           onClick={() => addColumn(parentKey.name, item.name)}
                         />
                         <Filter
                           size={20}
-                          className="cursor-pointer hover:text-blue-500"
+                          className="cursor-pointer hover:text-black"
                         />
                       </>
                     ) : (
@@ -91,11 +91,11 @@ export default function FieldSelection() {
                             handleTypeChange(parentKey.name, index)
                           }
                           title="Current format: Number. Click to change to text."
-                          className="cursor-pointer hover:text-blue-500"
+                          className="cursor-pointer hover:text-black"
                         />
                         <SquareSigma
                           size={20}
-                          className="cursor-pointer hover:text-blue-500"
+                          className="cursor-pointer hover:text-black"
                         />
                       </>
                     )}
