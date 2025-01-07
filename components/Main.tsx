@@ -120,7 +120,7 @@ export default function Main() {
 
         {files.length > 0 && db && <FieldSelection />}
       </section>
-      <section className="relative w-full md:h-full items-center justify-center">
+      <section className="relative w-full md:h-full items-center justify-center overflow-hidden">
         <div className="flex flex-col gap-1 h-full w-full">
           <PivotFields />
           <Button
@@ -131,7 +131,9 @@ export default function Main() {
             <Play size={20} />
             <p>{isQueryRunning ? "Running..." : "Run query"}</p>
           </Button>
-          {data && pyodide && <PyodidePandas data={data} />}
+          <div className="overflow-x-auto">
+            {data && pyodide && <PyodidePandas data={data} />}
+          </div>
         </div>
       </section>
     </main>

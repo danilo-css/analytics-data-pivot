@@ -37,10 +37,14 @@ export default function PyodidePandas({ data }: { data: any }) {
           .map((column) => `'${column.name}'`)
           .toString()}], values='${
           aggregation.name
-        }', aggfunc='${aggregation.type?.toLowerCase()}')          
+        }', aggfunc='${aggregation.type?.toLowerCase()}')
+          
+          # Format numbers with Brazilian Portuguese style
+          df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
+          
           # Convert results to HTML for display
           result_html = f"""
-          {df.to_html()}
+          {df_styled.to_html()}
           """
           result_html
         `;
@@ -48,7 +52,7 @@ export default function PyodidePandas({ data }: { data: any }) {
         const result = await pyodide.runPythonAsync(pythonCode);
         setResult(result);
       } catch (err) {
-        setError("Error running Pandas operation: " + err);
+        console.error("Error running Pandas operation: " + err);
       } finally {
         setLoading(false);
       }
@@ -58,14 +62,14 @@ export default function PyodidePandas({ data }: { data: any }) {
   }, [data, pyodide, rows, columns, aggregation]);
 
   return (
-    <div className="flex flex-col h-full w-full overflow-y-auto overflow-x-auto">
+    <>
       {loading && <div>Loading...</div>}
       {result && (
         <div
-          className="flex p-4 w-full h-full rounded-md border border-separate overflow-y-auto overflow-x-auto"
-          dangerouslySetInnerHTML={{ __html: result }}
+          className="flex p-4 w-full h-full rounded-md border border-separate overflow-y-auto overflow-x-auto [&_table]:border [&_th]:border [&_td]:border [&_td]:px-2 [&_th]:px-2 [&_td]:text-center [&_th]:text-center"
+          dangerouslySetInnerHTML={{ __html: result.replace(/nan/g, "") }}
         />
       )}
-    </div>
+    </>
   );
 }

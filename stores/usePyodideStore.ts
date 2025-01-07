@@ -40,6 +40,7 @@ export const usePyodideStore = create<PyodideStore>((set) => ({
 
             // Install and import pandas
             await pyodideInstance.loadPackage("pandas");
+            await pyodideInstance.loadPackage("Jinja2");
             await pyodideInstance.runPythonAsync(`
               import pandas as pd
               import js
