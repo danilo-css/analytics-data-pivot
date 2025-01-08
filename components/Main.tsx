@@ -15,6 +15,8 @@ import { usePivotStore } from "@/stores/usePivotStore";
 import { getTypeForColumn } from "@/lib/utils";
 import PyodidePandas from "./PyodidePandas";
 import { Button } from "./ui/button";
+import { useExcelStore } from "@/stores/useExcelStore";
+import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 
 export default function Main() {
   const { db, runQuery } = useDuckDBStore();
@@ -22,8 +24,7 @@ export default function Main() {
   const { files } = useFileStore();
   const { queryFields, setQueryFieldsFromFiles } = useTableStore();
   const { rows, columns, aggregation } = usePivotStore();
-
-  const [data, setData] = useState<any[] | null>(null);
+  const { result, handleDownload, setResult, setExcelData } = useExcelStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isQueryRunning, setIsQueryRunning] = useState(false);
@@ -96,11 +97,54 @@ export default function Main() {
     try {
       setIsQueryRunning(true);
       const result = await runQuery(db, sqlQuery);
-      setData(JSON.parse(result.toString()));
+      handleRunPyodide(JSON.parse(result.toString()));
     } catch (error) {
       console.error("Query execution error:", error);
     } finally {
       setIsQueryRunning(false);
+    }
+  };
+
+  const handleRunPyodide = async (queryData: any) => {
+    if (!pyodide) return;
+
+    try {
+      pyodide.globals.set("js_data", queryData);
+
+      // Example data
+      const pythonCode = `
+        import io
+        print(js_data.to_py())
+        df = pd.json_normalize(js_data.to_py())
+        df = df.pivot_table(index=[${rows
+          .map((row) => `'${row.name}'`)
+          .toString()}], columns=[${columns
+        .map((column) => `'${column.name}'`)
+        .toString()}], values='${
+        aggregation.name
+      }', aggfunc='${aggregation.type?.toLowerCase()}')
+        
+        # Format numbers with Brazilian Portuguese style
+        df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
+        
+        # Save Excel file to bytes
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+            df.to_excel(writer)
+        excel_bytes = excel_buffer.getvalue()
+        
+        # Convert results to HTML for display
+        result_html = f"""
+        {df_styled.to_html()}
+        """
+        [result_html, excel_bytes]
+      `;
+
+      const [htmlResult, excelBytes] = await pyodide.runPythonAsync(pythonCode);
+      setResult(htmlResult);
+      setExcelData(new Uint8Array(excelBytes));
+    } catch (err) {
+      console.error("Error running Pandas operation: " + err);
     }
   };
 
@@ -123,16 +167,29 @@ export default function Main() {
       <section className="relative w-full md:h-full items-center justify-center overflow-hidden">
         <div className="flex flex-col gap-1 h-full w-full">
           <PivotFields />
-          <Button
-            className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-            disabled={isQueryRunning}
-            onClick={handleRunQuery}
-          >
-            <Play size={20} />
-            <p>{isQueryRunning ? "Running..." : "Run query"}</p>
-          </Button>
+          <div className="flex flex-row gap-1">
+            <Button
+              className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+              disabled={isQueryRunning}
+              onClick={() => {
+                handleRunQuery();
+              }}
+            >
+              <Play size={20} />
+              <p>{isQueryRunning ? "Running..." : "Run query"}</p>
+            </Button>
+            {result && (
+              <Button
+                onClick={handleDownload}
+                className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+              >
+                <PiMicrosoftExcelLogoFill size={20} />
+                <p>Download Excel</p>
+              </Button>
+            )}
+          </div>
           <div className="overflow-x-auto">
-            {data && pyodide && <PyodidePandas data={data} />}
+            {result && pyodide && <PyodidePandas />}
           </div>
         </div>
       </section>

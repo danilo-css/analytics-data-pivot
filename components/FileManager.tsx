@@ -10,7 +10,8 @@ import { usePivotStore } from "@/stores/usePivotStore";
 export default function FileManager() {
   const { files, addFile, removeFile } = useFileStore();
   const { clearQueryFields } = useTableStore();
-  const { clearFileRows, clearFileColumns } = usePivotStore();
+  const { clearFileRows, clearFileColumns, clearFileAggregation } =
+    usePivotStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +62,7 @@ export default function FileManager() {
                   clearQueryFields(file.name);
                   clearFileRows(file.name);
                   clearFileColumns(file.name);
+                  clearFileAggregation(file.name);
                 }}
               >
                 Remove

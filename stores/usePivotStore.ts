@@ -36,6 +36,7 @@ export type PivotState = {
     type: "SUM" | "AVG" | "MIN" | "MAX"
   ) => void;
   clearAggregation: () => void;
+  clearFileAggregation: (table?: string) => void;
 };
 
 export const usePivotStore = create<PivotState>((set) => ({
@@ -118,4 +119,9 @@ export const usePivotStore = create<PivotState>((set) => ({
     }));
   },
   clearAggregation: () => set({ aggregation: {} }),
+  clearFileAggregation: (table) =>
+    set((state) => ({
+      aggregation:
+        table && state.aggregation.table === table ? {} : state.aggregation,
+    })),
 }));
