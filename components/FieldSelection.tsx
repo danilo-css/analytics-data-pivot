@@ -11,9 +11,10 @@ import {
 import { Badge } from "./ui/badge";
 import { TbNumber123 } from "react-icons/tb";
 import { PiTextAaFill } from "react-icons/pi";
-import { Columns3, Database, Filter, Rows3, SquareSigma } from "lucide-react";
+import { Columns3, Database, Rows3, SquareSigma } from "lucide-react";
 import { useFileStore } from "@/stores/useFileStore";
 import { usePivotStore } from "@/stores/usePivotStore";
+import FilterDialog from "./FilterDialog";
 
 export default function FieldSelection() {
   const { queryFields, setQueryFields } = useTableStore();
@@ -78,10 +79,7 @@ export default function FieldSelection() {
                           className="cursor-pointer hover:text-black"
                           onClick={() => addColumn(parentKey.name, item.name)}
                         />
-                        <Filter
-                          size={20}
-                          className="cursor-pointer hover:text-black"
-                        />
+                        <FilterDialog />
                       </>
                     ) : (
                       <>

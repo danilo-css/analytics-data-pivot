@@ -120,9 +120,11 @@ export default function Main() {
           .map((row) => `'${row.name}'`)
           .toString()}], columns=[${columns
         .map((column) => `'${column.name}'`)
-        .toString()}], values='${
-        aggregation.name
-      }', aggfunc='${aggregation.type?.toLowerCase()}')
+        .toString()}], values='${aggregation.name}', aggfunc='${
+        aggregation.type?.toLowerCase() === "avg"
+          ? "mean"
+          : aggregation.type?.toLowerCase()
+      }')
         
         # Format numbers with Brazilian Portuguese style
         df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
@@ -150,7 +152,7 @@ export default function Main() {
 
   return (
     <main className="relative md:absolute flex flex-col md:flex-row items-center md:items-start justify-center h-full w-full gap-1 py-1 px-1">
-      <section className="relative md:w-fit w-full md:h-full flex-shrink-0">
+      <section className="relative md:w-fit w-full md:h-full flex flex-col flex-shrink-0 gap-1">
         <div className="flex flex-col items-center border rounded-lg py-4 px-4">
           <InitWasm />
           {pyodide && db && <FileManager />}

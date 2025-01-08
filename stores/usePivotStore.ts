@@ -16,6 +16,12 @@ type aggregationType = {
   type?: "SUM" | "AVG" | "MIN" | "MAX";
 };
 
+type filterType = {
+  name: string;
+  table: string;
+  values: string[];
+};
+
 export type PivotState = {
   rows: rowType[];
   setRows: (table: string, rows: string[]) => void;
@@ -37,6 +43,10 @@ export type PivotState = {
   ) => void;
   clearAggregation: () => void;
   clearFileAggregation: (table?: string) => void;
+  filters: filterType[];
+  setFilters: (table: string, filters: filterType[]) => void;
+  clearFilter: (table: string, filter: filterType) => void;
+  clearFilters: () => void;
 };
 
 export const usePivotStore = create<PivotState>((set) => ({
@@ -124,4 +134,35 @@ export const usePivotStore = create<PivotState>((set) => ({
       aggregation:
         table && state.aggregation.table === table ? {} : state.aggregation,
     })),
+  filters: [],
+  setFilters: (table, filters) => {
+    set((state) => ({
+      filters: [
+        ...state.filters,
+        ...filters
+          .filter(
+            (filter) =>
+              !state.filters.some(
+                (f) =>
+                  f.table === table &&
+                  f.name === filter.name &&
+                  f.values.join(",") === filter.values.join(",")
+              )
+          )
+          .map((filter) => ({
+            name: filter.name,
+            table: table,
+            values: filter.values,
+          })),
+      ],
+    }));
+  },
+  clearFilter: (table, filter) => {
+    set((state) => ({
+      filters: state.filters.filter(
+        (f) => !(f.table === table && f.name === filter.name)
+      ),
+    }));
+  },
+  clearFilters: () => set({ filters: [] }),
 }));
