@@ -65,49 +65,50 @@ export default function FileManager() {
   const getSheetNames = async (file: File): Promise<string[]> => {
     const arrayBuffer = await file.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
-    const dataList = Array.from(uint8Array);
+
+    // Write to virtual filesystem instead of passing data through JSON
+    pyodide?.FS.writeFile("/tmp/excel_file.xlsx", uint8Array);
 
     const result = await pyodide?.runPythonAsync(`
       import pandas as pd
-      import io
-      import js
       
-      bytes_data = bytes(${JSON.stringify(dataList)})
-      excel_file = io.BytesIO(bytes_data)
-      xl = pd.ExcelFile(excel_file)
+      xl = pd.ExcelFile('/tmp/excel_file.xlsx')
       sheet_names = xl.sheet_names
       sheet_names
     `);
+
+    // Cleanup
+    pyodide?.FS.unlink("/tmp/excel_file.xlsx");
 
     return result.toJs();
   };
 
   const convertToParquet = async (sheet: string) => {
     if (!currentXlsxFile) return;
-
     setIsConverting(true);
 
     const arrayBuffer = await currentXlsxFile.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
-    const dataList = Array.from(uint8Array);
+
+    // Write to virtual filesystem
+    pyodide?.FS.writeFile("/tmp/excel_file.xlsx", uint8Array);
 
     const result = await pyodide?.runPythonAsync(`
       import pandas as pd
       import pyarrow as pa
       import pyarrow.parquet as pq
       import io
-      import js
       
-      bytes_data = bytes(${JSON.stringify(dataList)})
-      excel_file = io.BytesIO(bytes_data)
-      df = pd.read_excel(excel_file, sheet_name='${sheet}')
-      
+      df = pd.read_excel('/tmp/excel_file.xlsx', sheet_name='${sheet}')
       table = pa.Table.from_pandas(df)
       
       output_buffer = io.BytesIO()
       pq.write_table(table, output_buffer)
       output_buffer.getvalue()
     `);
+
+    // Cleanup
+    pyodide?.FS.unlink("/tmp/excel_file.xlsx");
 
     const uint8ArrayResult = new Uint8Array(result.toJs());
     const blob = new Blob([uint8ArrayResult], {
