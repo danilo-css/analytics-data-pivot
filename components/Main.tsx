@@ -23,7 +23,7 @@ export default function Main() {
   const { pyodide } = usePyodideStore();
   const { files } = useFileStore();
   const { queryFields, setQueryFieldsFromFiles } = useTableStore();
-  const { rows, columns, aggregation } = usePivotStore();
+  const { rows, columns, aggregation, filters } = usePivotStore();
   const { result, handleDownload, setResult, setExcelData } = useExcelStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export default function Main() {
     } finally {
       setLoading(false);
     }
-  }, [files]);
+  }, [files, db, runQuery, setQueryFieldsFromFiles]);
 
   const sqlQuery = useMemo(() => {
     if (files.length === 0) {
@@ -85,11 +85,23 @@ export default function Main() {
           : "FLOAT"
       })) AS "${aggregation.name}"
           FROM '${files[0].name}' 
+          ${
+            filters.length > 0
+              ? `WHERE ${filters
+                  .map(
+                    (filter) =>
+                      `"${filter.field}" IN (${filter.values
+                        .map((value) => `'${value}'`)
+                        .join(", ")})`
+                  )
+                  .join(" AND ")}`
+              : ""
+          }
           GROUP BY ${all_fields_string_groupby}
           `;
     }
     return null;
-  }, [files, rows, columns, aggregation, queryFields]);
+  }, [files, rows, columns, aggregation, queryFields, filters]);
 
   const handleRunQuery = async () => {
     if (!sqlQuery || !db || isQueryRunning) return;
@@ -110,8 +122,9 @@ export default function Main() {
 
     try {
       pyodide.globals.set("js_data", queryData);
+      pyodide.globals.set("js_filters", filters);
+      console.log(filters);
 
-      // Example data
       const pythonCode = `
         import io
         print(js_data.to_py())
@@ -129,10 +142,16 @@ export default function Main() {
         # Format numbers with Brazilian Portuguese style
         df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
         
+        # Create filters DataFrame
+        filters_data = js_filters.to_py()
+        filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) for f in filters_data], 
+                                columns=['Table', 'Field', 'Values'])
+        
         # Save Excel file to bytes
         excel_buffer = io.BytesIO()
         with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-            df.to_excel(writer)
+            df.to_excel(writer, sheet_name='Pivot Table')
+            filters_df.to_excel(writer, sheet_name='Filters', index=False)
         excel_bytes = excel_buffer.getvalue()
         
         # Convert results to HTML for display
