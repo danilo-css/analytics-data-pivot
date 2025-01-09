@@ -36,14 +36,16 @@ export default function FieldSelection() {
           value={parentKey.name}
           className="w-full border px-4 rounded-lg"
         >
-          <AccordionTrigger className="flex flex-row">
+          <AccordionTrigger className="flex flex-row gap-2">
             <div className="relative">
               <Database />
               <span className="absolute -bottom-[6px] -right-[6px] text-xs bg-black px-1 rounded-md">
                 {index}
               </span>
             </div>
-            <div>{parentKey.name}</div>
+            <div className="text-ellipsis break-words max-w-[200px]">
+              {parentKey.name}
+            </div>
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-1 overflow-y-auto max-h-[400px]">
             {queryFields[parentKey.name]?.map((item, index) => (

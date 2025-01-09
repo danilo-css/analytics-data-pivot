@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { PyodideInterface } from "pyodide";
-import { PYODIDE_VERSION } from "@/lib/constants";
 
 type PyodideStore = {
   pyodide: PyodideInterface | null;
@@ -19,7 +18,7 @@ export const usePyodideStore = create<PyodideStore>((set) => ({
 
       // Load Pyodide script
       const script = document.createElement("script");
-      script.src = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/pyodide.js`;
+      script.src = `https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.js`;
       script.async = true;
       document.body.appendChild(script);
 
@@ -35,7 +34,7 @@ export const usePyodideStore = create<PyodideStore>((set) => ({
                   }) => Promise<PyodideInterface>;
                 }
             ).loadPyodide({
-              indexURL: `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`,
+              indexURL: `https://cdn.jsdelivr.net/pyodide/dev/full/`,
             });
 
             // Install and import pandas
@@ -47,6 +46,7 @@ export const usePyodideStore = create<PyodideStore>((set) => ({
               import js
               import micropip
               await micropip.install('openpyxl')
+              await micropip.install('pyarrow')
             `);
 
             set({ pyodide: pyodideInstance, loadingpyodide: false });
