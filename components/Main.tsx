@@ -10,7 +10,7 @@ import { usePyodideStore } from "@/stores/usePyodideStore";
 import { useTableStore } from "@/stores/useTableStore";
 import FieldSelection from "./FieldSelection";
 import PivotFields from "./PivotFields";
-import { Play } from "lucide-react";
+import { Copy, Play } from "lucide-react";
 import { usePivotStore } from "@/stores/usePivotStore";
 import { getTypeForColumn } from "@/lib/utils";
 import PyodidePandas from "./PyodidePandas";
@@ -206,6 +206,15 @@ export default function Main() {
               >
                 <PiMicrosoftExcelLogoFill size={20} />
                 <p>Download Excel</p>
+              </Button>
+            )}
+            {sqlQuery && (
+              <Button
+                onClick={() => navigator.clipboard.writeText(sqlQuery)}
+                className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+              >
+                <Copy size={20} />
+                <p>Copy SQL</p>
               </Button>
             )}
           </div>

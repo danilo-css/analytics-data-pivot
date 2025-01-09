@@ -13,7 +13,7 @@ export default function PivotFilters() {
     <div className="flex flex-row items-center gap-3 border rounded-lg justify-between px-4 py-1">
       <div className="flex flex-row items-center gap-1">
         <Rows3 size={20} />
-        <p>Rows</p>
+        <p>Filters</p>
       </div>
       <div className="flex flex-row flex-wrap items-center gap-2">
         {filters.map((filter, index) => (

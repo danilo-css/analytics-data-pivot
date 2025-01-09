@@ -51,8 +51,13 @@ export default function FilterDialog({
         FROM '${table}'
         `
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setValues(JSON.parse(result.toString()).map((obj: any) => obj[field]));
+
+      setValues(
+        JSON.parse(result.toString()).map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (obj: any) => obj[field]?.toString() ?? "(Null)"
+        )
+      );
       setLoading(false);
     }
   };
