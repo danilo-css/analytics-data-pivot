@@ -79,7 +79,10 @@ export default function FieldSelection() {
                           className="cursor-pointer hover:text-black"
                           onClick={() => addColumn(parentKey.name, item.name)}
                         />
-                        <FilterDialog />
+                        <FilterDialog
+                          table={parentKey.name}
+                          field={item.name}
+                        />
                       </>
                     ) : (
                       <>

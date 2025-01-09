@@ -16,9 +16,9 @@ type aggregationType = {
   type?: "SUM" | "AVG" | "MIN" | "MAX";
 };
 
-type filterType = {
-  name: string;
+export type filterType = {
   table: string;
+  field: string;
   values: string[];
 };
 
@@ -44,9 +44,10 @@ export type PivotState = {
   clearAggregation: () => void;
   clearFileAggregation: (table?: string) => void;
   filters: filterType[];
-  setFilters: (table: string, filters: filterType[]) => void;
-  clearFilter: (table: string, filter: filterType) => void;
+  addFilter: (table: string, field: string, values: string[]) => void;
+  clearFilter: (table: string, field: string) => void;
   clearFilters: () => void;
+  clearFileFilters: (table?: string) => void;
 };
 
 export const usePivotStore = create<PivotState>((set) => ({
@@ -135,34 +136,26 @@ export const usePivotStore = create<PivotState>((set) => ({
         table && state.aggregation.table === table ? {} : state.aggregation,
     })),
   filters: [],
-  setFilters: (table, filters) => {
-    set((state) => ({
-      filters: [
-        ...state.filters,
-        ...filters
-          .filter(
-            (filter) =>
-              !state.filters.some(
-                (f) =>
-                  f.table === table &&
-                  f.name === filter.name &&
-                  f.values.join(",") === filter.values.join(",")
-              )
-          )
-          .map((filter) => ({
-            name: filter.name,
-            table: table,
-            values: filter.values,
-          })),
-      ],
-    }));
+  addFilter: (table, field, values) => {
+    set((state) => {
+      const filteredFilters = state.filters.filter(
+        (f) => !(f.table === table && f.field === field)
+      );
+      return {
+        filters: [...filteredFilters, { table, field, values }],
+      };
+    });
   },
-  clearFilter: (table, filter) => {
+  clearFilter: (table, field) => {
     set((state) => ({
       filters: state.filters.filter(
-        (f) => !(f.table === table && f.name === filter.name)
+        (f) => !(f.table === table && f.field === field)
       ),
     }));
   },
   clearFilters: () => set({ filters: [] }),
+  clearFileFilters: (table) =>
+    set((state) => ({
+      filters: table ? state.filters.filter((f) => f.table !== table) : [],
+    })),
 }));

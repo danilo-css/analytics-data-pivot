@@ -4,6 +4,7 @@ import React from "react";
 import Aggregation from "./pivotfields/Aggregation";
 import PivotColumns from "./pivotfields/PivotColumns";
 import PivotRows from "./pivotfields/PivotRows";
+import PivotFilters from "./pivotfields/PivotFilters";
 
 export default function PivotFields() {
   return (
@@ -14,6 +15,7 @@ export default function PivotFields() {
       <div className="flex flex-col gap-1 w-full">
         <PivotRows />
         <PivotColumns />
+        <PivotFilters />
       </div>
     </div>
   );
