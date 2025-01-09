@@ -1,7 +1,7 @@
 import { usePivotStore } from "@/stores/usePivotStore";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Database, Rows3, Trash2 } from "lucide-react";
+import { Database, Filter, Trash2 } from "lucide-react";
 import { useFileStore } from "@/stores/useFileStore";
 import FilterDialog from "../FilterDialog";
 
@@ -12,7 +12,7 @@ export default function PivotFilters() {
   return (
     <div className="flex flex-row items-center gap-3 border rounded-lg justify-between px-4 py-1">
       <div className="flex flex-row items-center gap-1">
-        <Rows3 size={20} />
+        <Filter size={20} />
         <p>Filters</p>
       </div>
       <div className="flex flex-row flex-wrap items-center gap-2">
