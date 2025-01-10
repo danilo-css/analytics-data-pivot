@@ -19,6 +19,7 @@ import { useExcelStore } from "@/stores/useExcelStore";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { useRelationalStore } from "@/stores/useRelationalStore";
 import RelationalStructure from "./RelationalStructure";
+import { FaLanguage } from "react-icons/fa6";
 
 export default function Main() {
   const { db, runQuery } = useDuckDBStore();
@@ -31,6 +32,7 @@ export default function Main() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isQueryRunning, setIsQueryRunning] = useState(false);
+  const [useFormat, setUseFormat] = useState(true);
 
   useEffect(() => {
     if (!files || !db) return;
@@ -232,10 +234,10 @@ export default function Main() {
     try {
       pyodide.globals.set("js_data", queryData);
       pyodide.globals.set("js_filters", filters);
+      pyodide.globals.set("use__format", useFormat);
 
       const pythonCode = `
         import io
-        print(js_data.to_py())
         df = pd.json_normalize(js_data.to_py())
         df = df.pivot_table(index=[${rows
           .map((row) => `'${row.name}'`)
@@ -247,8 +249,11 @@ export default function Main() {
           : aggregation.type?.toLowerCase()
       }')
         
-        # Format numbers with Brazilian Portuguese style
-        df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
+        # Conditional formatting based on user preference
+        if use__format:
+            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
+        else:
+            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x))
         
         # Create filters DataFrame
         filters_data = js_filters.to_py()
@@ -338,6 +343,17 @@ export default function Main() {
                     <p>Copy SQL</p>
                   </Button>
                 )}
+                <Button
+                  onClick={() => {
+                    setUseFormat(!useFormat);
+                  }}
+                  className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                >
+                  <FaLanguage size={20} />
+                  <p>
+                    {useFormat ? "Use American Format" : "Use European Format"}
+                  </p>
+                </Button>
               </div>
               <div className="overflow-x-auto">
                 {result && pyodide && <PyodidePandas />}
