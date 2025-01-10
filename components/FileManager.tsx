@@ -138,7 +138,7 @@ export default function FileManager() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full overflow-y-auto space-y-4">
       {(isLoading || isConverting) && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50">
           <Spinner />

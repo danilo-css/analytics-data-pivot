@@ -183,7 +183,7 @@ export default function Main() {
                   .filter((relationship) =>
                     relationship.includes(
                       `TABLE${files.findIndex(
-                        (file) => file.name === file.name
+                        (innerFile2) => file.name === innerFile2.name
                       )}`
                     )
                   )
