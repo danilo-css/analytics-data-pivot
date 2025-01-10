@@ -103,9 +103,114 @@ export default function Main() {
           GROUP BY ${all_fields_string_groupby}
           `;
     } else if (files.length > 1 && aggregation.name) {
+      //{files.findIndex((file) => file.name === row.table)}
+      const fields = [...rows, ...columns];
+
+      const uniqueFields = [
+        ...new Set(fields.map((field) => JSON.stringify(field))),
+      ].map((str) => JSON.parse(str));
+
+      const all_fields_string = uniqueFields.map(
+        (field) =>
+          `CAST(TABLE${files.findIndex((file) => file.name === field.table)}."${
+            field.name
+          }" AS ${
+            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+              ? "VARCHAR"
+              : "FLOAT"
+          }) AS "${field.name}"`
+      );
+
+      const all_fields_string_groupby = uniqueFields
+        .map(
+          (field) =>
+            `CAST(TABLE${files.findIndex(
+              (file) => file.name === field.table
+            )}."${field.name}" AS ${
+              getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+                ? "VARCHAR"
+                : "FLOAT"
+            })`
+        )
+        .join(", ");
+
+      const relationship_list = relationships.map(
+        (relationship) =>
+          `CAST(TABLE${files.findIndex(
+            (file) => file.name === relationship.primary_table
+          )}."${relationship.primary_key}" AS ${
+            getTypeForColumn(
+              queryFields,
+              relationship.primary_table,
+              relationship.primary_key
+            ) === "Utf8"
+              ? "VARCHAR"
+              : "FLOAT"
+          }) = CAST(TABLE${files.findIndex(
+            (file) => file.name === relationship.foreign_table
+          )}."${relationship.foreign_key}" AS ${
+            getTypeForColumn(
+              queryFields,
+              relationship.foreign_table,
+              relationship.foreign_key
+            ) === "Utf8"
+              ? "VARCHAR"
+              : "FLOAT"
+          })`
+      );
+
+      return `
+          SELECT ${all_fields_string}, ${aggregation.type}(CAST("${
+        aggregation.name
+      }" AS ${
+        getTypeForColumn(
+          queryFields,
+          files[files.findIndex((file) => file.name === aggregation.table)]
+            .name,
+          aggregation.name
+        ) === "Utf8"
+          ? "VARCHAR"
+          : "FLOAT"
+      })) AS "${aggregation.name}"
+          FROM '${files[0].name}' AS TABLE0
+          JOIN ${files
+            .slice(1)
+            .map(
+              (file) =>
+                `'${file.name}' AS TABLE${files.findIndex(
+                  (innerFile) => file.name === innerFile.name
+                )} ON ${relationship_list
+                  .filter((relationship) =>
+                    relationship.includes(
+                      `TABLE${files.findIndex(
+                        (file) => file.name === file.name
+                      )}`
+                    )
+                  )
+                  .join(" AND ")}`
+            )
+            .join(" JOIN ")}
+          ${
+            filters.length > 0
+              ? `WHERE ${filters
+                  .map(
+                    (filter) =>
+                      `TABLE${files.findIndex(
+                        (file) => file.name === filter.table
+                      )}."${filter.field}" IN (${filter.values
+                        .map((value) => `'${value}'`)
+                        .join(", ")})`
+                  )
+                  .join(" AND ")}`
+              : ""
+          }
+          GROUP BY ${all_fields_string_groupby}
+          `;
     }
     return null;
-  }, [files, rows, columns, aggregation, queryFields, filters]);
+  }, [files, rows, columns, aggregation, queryFields, filters, relationships]);
+
+  console.log(sqlQuery);
 
   const handleRunQuery = async () => {
     if (!sqlQuery || !db || isQueryRunning) return;
@@ -127,7 +232,6 @@ export default function Main() {
     try {
       pyodide.globals.set("js_data", queryData);
       pyodide.globals.set("js_filters", filters);
-      console.log(filters);
 
       const pythonCode = `
         import io
