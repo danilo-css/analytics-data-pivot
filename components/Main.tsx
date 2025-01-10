@@ -17,6 +17,8 @@ import PyodidePandas from "./PyodidePandas";
 import { Button } from "./ui/button";
 import { useExcelStore } from "@/stores/useExcelStore";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
+import { useRelationalStore } from "@/stores/useRelationalStore";
+import RelationalStructure from "./RelationalStructure";
 
 export default function Main() {
   const { db, runQuery } = useDuckDBStore();
@@ -25,6 +27,7 @@ export default function Main() {
   const { queryFields, setQueryFieldsFromFiles } = useTableStore();
   const { rows, columns, aggregation, filters } = usePivotStore();
   const { result, handleDownload, setResult, setExcelData } = useExcelStore();
+  const { relationships } = useRelationalStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isQueryRunning, setIsQueryRunning] = useState(false);
@@ -99,6 +102,7 @@ export default function Main() {
           }
           GROUP BY ${all_fields_string_groupby}
           `;
+    } else if (files.length > 1 && aggregation.name) {
     }
     return null;
   }, [files, rows, columns, aggregation, queryFields, filters]);
@@ -169,6 +173,17 @@ export default function Main() {
     }
   };
 
+  const hasRelationships = useMemo(
+    () =>
+      files.every((file) =>
+        relationships.some(
+          (rel) =>
+            rel.primary_table === file.name || rel.foreign_table === file.name
+        )
+      ),
+    [files, relationships]
+  );
+
   return (
     <main className="relative md:absolute flex flex-col md:flex-row items-center md:items-start justify-center h-full w-full gap-1 py-1 px-1">
       <section className="relative md:w-fit w-full md:h-full flex flex-col flex-shrink-0 gap-1">
@@ -187,40 +202,45 @@ export default function Main() {
       </section>
       <section className="relative w-full md:h-full items-center justify-center overflow-hidden">
         <div className="flex flex-col gap-1 h-full w-full">
-          <PivotFields />
-          <div className="flex flex-row gap-1">
-            <Button
-              className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-              disabled={isQueryRunning}
-              onClick={() => {
-                handleRunQuery();
-              }}
-            >
-              <Play size={20} />
-              <p>{isQueryRunning ? "Running..." : "Run query"}</p>
-            </Button>
-            {result && (
-              <Button
-                onClick={handleDownload}
-                className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-              >
-                <PiMicrosoftExcelLogoFill size={20} />
-                <p>Download Excel</p>
-              </Button>
-            )}
-            {sqlQuery && (
-              <Button
-                onClick={() => navigator.clipboard.writeText(sqlQuery)}
-                className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-              >
-                <Copy size={20} />
-                <p>Copy SQL</p>
-              </Button>
-            )}
-          </div>
-          <div className="overflow-x-auto">
-            {result && pyodide && <PyodidePandas />}
-          </div>
+          {(files.length <= 1 || hasRelationships) && (
+            <>
+              <PivotFields />
+              <div className="flex flex-row gap-1">
+                <Button
+                  className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                  disabled={isQueryRunning}
+                  onClick={() => {
+                    handleRunQuery();
+                  }}
+                >
+                  <Play size={20} />
+                  <p>{isQueryRunning ? "Running..." : "Run query"}</p>
+                </Button>
+                {result && (
+                  <Button
+                    onClick={handleDownload}
+                    className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                  >
+                    <PiMicrosoftExcelLogoFill size={20} />
+                    <p>Download Excel</p>
+                  </Button>
+                )}
+                {sqlQuery && (
+                  <Button
+                    onClick={() => navigator.clipboard.writeText(sqlQuery)}
+                    className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                  >
+                    <Copy size={20} />
+                    <p>Copy SQL</p>
+                  </Button>
+                )}
+              </div>
+              <div className="overflow-x-auto">
+                {result && pyodide && <PyodidePandas />}
+              </div>
+            </>
+          )}
+          {files.length > 1 && <RelationalStructure />}
         </div>
       </section>
     </main>
