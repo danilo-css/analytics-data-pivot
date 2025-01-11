@@ -14,6 +14,7 @@ type TableState = {
   queryFields: Record<string, FieldsType[]>;
   setQueryFields: (tableName: string, fields: FieldsType[]) => void;
   clearQueryFields: (tableName: string) => void;
+  isLoadingFields: boolean;
   setQueryFieldsFromFiles: (
     files: File[],
     db: AsyncDuckDB,
@@ -35,6 +36,7 @@ export const useTableStore = create<TableState>((set) => ({
       return { queryResults: newResults };
     }),
   queryFields: {},
+  isLoadingFields: false,
   setQueryFields: (tableName, fields) => {
     set((state) => ({
       queryFields: { ...state.queryFields, [tableName]: fields },
@@ -42,27 +44,32 @@ export const useTableStore = create<TableState>((set) => ({
   },
   setQueryFieldsFromFiles: async (files, db, runQuery) => {
     const store = useTableStore.getState();
-    for (const file of Object.values(files)) {
-      await db.registerFileHandle(
-        file.name,
-        file,
-        duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
-        true
-      );
-      const query = `SELECT * FROM '${file.name}' LIMIT 1`;
-      const result = await runQuery(db, query);
+    set({ isLoadingFields: true });
+    try {
+      for (const file of Object.values(files)) {
+        await db.registerFileHandle(
+          file.name,
+          file,
+          duckdb.DuckDBDataProtocol.BROWSER_FILEREADER,
+          true
+        );
+        const query = `SELECT * FROM '${file.name}' LIMIT 1`;
+        const result = await runQuery(db, query);
 
-      const fields: FieldsType[] = result.schema.fields
-        .filter(
-          (field: { name: string; type: string }) =>
-            field.name !== "__index_level_0__"
-        )
-        .map((field: { name: string; type: string }) => ({
-          name: field.name,
-          type: field.type.toString(),
-        }));
+        const fields: FieldsType[] = result.schema.fields
+          .filter(
+            (field: { name: string; type: string }) =>
+              field.name !== "__index_level_0__"
+          )
+          .map((field: { name: string; type: string }) => ({
+            name: field.name,
+            type: field.type.toString(),
+          }));
 
-      store.setQueryFields(file.name, fields);
+        store.setQueryFields(file.name, fields);
+      }
+    } finally {
+      set({ isLoadingFields: false });
     }
   },
   clearQueryFields: (tableName) =>
