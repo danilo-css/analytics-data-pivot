@@ -273,24 +273,35 @@ export default function Main() {
           : aggregation.type?.toLowerCase()
       }')
         
-        # Save the raw data to Excel first
-        # Create filters DataFrame
-        filters_data = js_filters.to_py()
-        filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) for f in filters_data], 
-                                columns=['Table', 'Field', 'Values'])
-        
+        # Check table dimensions
+        total_cells = df.shape[0] * df.shape[1]
+        if total_cells >= 50000:
+            html_content = "Table is too big. Download Excel instead."
+        else:
+            # Save the raw data to Excel first
+            # Create filters DataFrame
+            filters_data = js_filters.to_py()
+            filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) for f in filters_data], 
+                                    columns=['Table', 'Field', 'Values'])
+            
+            with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
+                df.to_excel(writer, sheet_name='Pivot Table')
+                filters_df.to_excel(writer, sheet_name='Filters', index=False)
+
+            # Generate HTML separately to avoid keeping both in memory
+            if use__format:
+                df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
+            else:
+                df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x))
+                
+            html_content = df_styled.to_html()
+            del df_styled  # Explicitly delete the styled DataFrame
+
+        # Always save Excel file regardless of size
         with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Pivot Table')
             filters_df.to_excel(writer, sheet_name='Filters', index=False)
 
-        # Generate HTML separately to avoid keeping both in memory
-        if use__format:
-            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
-        else:
-            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x))
-            
-        html_content = df_styled.to_html()
-        del df_styled  # Explicitly delete the styled DataFrame
         html_content
       `;
 
