@@ -209,6 +209,8 @@ export default function Main() {
     return null;
   }, [files, rows, columns, aggregation, queryFields, filters, relationships]);
 
+  console.log(sqlQuery);
+
   const handleRunQuery = async () => {
     if (!sqlQuery || !db || isQueryRunning) return;
 
@@ -257,7 +259,7 @@ export default function Main() {
         
         # Save Excel file
         df.to_excel('/tmp/pivot_table.xlsx', sheet_name='Pivot Table')
-        filters_df.to_excel('/tmp/pivot_table.xlsx', sheet_name='Filters', index=False)
+        filters_df.to_excel('/tmp/pivot_table.xlsx', sheet_name='Filters', index=False, mode='a')
         
         # Convert results to HTML for display
         result_html = df_styled.to_html()
