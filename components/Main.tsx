@@ -13,7 +13,9 @@ import PivotFields from "./PivotFields";
 import { Copy, Play } from "lucide-react";
 import { usePivotStore } from "@/stores/usePivotStore";
 import { getTypeForColumn } from "@/lib/utils";
+import PyodidePandas from "./PyodidePandas";
 import { Button } from "./ui/button";
+import { useExcelStore } from "@/stores/useExcelStore";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { useRelationalStore } from "@/stores/useRelationalStore";
 import RelationalStructure from "./RelationalStructure";
@@ -25,12 +27,12 @@ export default function Main() {
   const { files } = useFileStore();
   const { queryFields, setQueryFieldsFromFiles } = useTableStore();
   const { rows, columns, aggregation, filters } = usePivotStore();
+  const { result, handleDownload, setResult, setExcelData } = useExcelStore();
   const { relationships } = useRelationalStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isQueryRunning, setIsQueryRunning] = useState(false);
   const [useFormat, setUseFormat] = useState(true);
-  const [resultHtml, setResultHtml] = useState<string | null>(null);
 
   useEffect(() => {
     if (!files || !db) return;
@@ -103,6 +105,7 @@ export default function Main() {
           GROUP BY ${all_fields_string_groupby}
           `;
     } else if (files.length > 1 && aggregation.name) {
+      //{files.findIndex((file) => file.name === row.table)}
       const fields = [...rows, ...columns];
 
       const uniqueFields = [
@@ -257,36 +260,25 @@ export default function Main() {
         filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) for f in filters_data], 
                                 columns=['Table', 'Field', 'Values'])
         
-        # Save Excel file
-        df.to_excel('/tmp/pivot_table.xlsx', sheet_name='Pivot Table')
-        filters_df.to_excel('/tmp/pivot_table.xlsx', sheet_name='Filters', index=False, mode='a')
+        # Save Excel file to bytes
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Pivot Table')
+            filters_df.to_excel(writer, sheet_name='Filters', index=False)
+        excel_bytes = excel_buffer.getvalue()
         
         # Convert results to HTML for display
-        result_html = df_styled.to_html()
-        result_html
+        result_html = f"""
+        {df_styled.to_html()}
+        """
+        [result_html, excel_bytes]
       `;
 
-      const htmlResult = await pyodide.runPythonAsync(pythonCode);
-      setResultHtml(htmlResult);
+      const [htmlResult, excelBytes] = await pyodide.runPythonAsync(pythonCode);
+      setResult(htmlResult);
+      setExcelData(new Uint8Array(excelBytes));
     } catch (err) {
       console.error("Error running Pandas operation: " + err);
-    }
-  };
-
-  const handleDownload = async () => {
-    try {
-      const response = await fetch("/tmp/pivot_table.xlsx");
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "pivot_table.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Error downloading Excel file:", error);
     }
   };
 
@@ -333,7 +325,7 @@ export default function Main() {
                   <Play size={20} />
                   <p>{isQueryRunning ? "Running..." : "Run query"}</p>
                 </Button>
-                {resultHtml && (
+                {result && (
                   <Button
                     onClick={handleDownload}
                     className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
@@ -364,14 +356,7 @@ export default function Main() {
                 </Button>
               </div>
               <div className="overflow-x-auto">
-                {resultHtml && (
-                  <div
-                    className="flex p-4 w-full h-full rounded-md border border-separate overflow-y-auto overflow-x-auto [&_table]:border [&_th]:border [&_td]:border [&_td]:px-2 [&_th]:px-2 [&_td]:text-center [&_th]:text-center"
-                    dangerouslySetInnerHTML={{
-                      __html: resultHtml.replace(/nan/g, ""),
-                    }}
-                  />
-                )}
+                {result && pyodide && <PyodidePandas />}
               </div>
             </>
           )}
