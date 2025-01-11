@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import FileManager from "./FileManager";
 import { useFileStore } from "@/stores/useFileStore";
 import { useDuckDBStore } from "@/stores/useDuckDBStore";
@@ -13,7 +13,6 @@ import PivotFields from "./PivotFields";
 import { Copy, Play } from "lucide-react";
 import { usePivotStore } from "@/stores/usePivotStore";
 import { getTypeForColumn } from "@/lib/utils";
-import PyodidePandas from "./PyodidePandas";
 import { Button } from "./ui/button";
 import { useExcelStore } from "@/stores/useExcelStore";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
@@ -27,12 +26,14 @@ export default function Main() {
   const { files } = useFileStore();
   const { queryFields, setQueryFieldsFromFiles } = useTableStore();
   const { rows, columns, aggregation, filters } = usePivotStore();
-  const { result, handleDownload, setResult, setExcelData } = useExcelStore();
+  const { setResult } = useExcelStore();
   const { relationships } = useRelationalStore();
+  const { result } = useExcelStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isQueryRunning, setIsQueryRunning] = useState(false);
   const [useFormat, setUseFormat] = useState(true);
+  const resultContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!files || !db) return;
@@ -228,8 +229,31 @@ export default function Main() {
     }
   };
 
+  const handleDownload = () => {
+    if (!pyodide) {
+      console.error("Pyodide is not initialized");
+      return;
+    }
+
+    try {
+      const excelBytes = pyodide.FS.readFile("/excel_output.xlsx");
+      const blob = new Blob([excelBytes], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "pivot_table.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
+  };
   const handleRunPyodide = async (queryData: any) => {
-    if (!pyodide) return;
+    if (!pyodide || !resultContainerRef.current) return;
 
     try {
       pyodide.globals.set("js_data", queryData);
@@ -249,36 +273,33 @@ export default function Main() {
           : aggregation.type?.toLowerCase()
       }')
         
-        # Conditional formatting based on user preference
-        if use__format:
-            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
-        else:
-            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x))
-        
+        # Save the raw data to Excel first
         # Create filters DataFrame
         filters_data = js_filters.to_py()
         filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) for f in filters_data], 
                                 columns=['Table', 'Field', 'Values'])
         
-        # Save Excel file to bytes
-        excel_buffer = io.BytesIO()
-        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+        with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Pivot Table')
             filters_df.to_excel(writer, sheet_name='Filters', index=False)
-        excel_bytes = excel_buffer.getvalue()
-        
-        # Convert results to HTML for display
-        result_html = f"""
-        {df_styled.to_html()}
-        """
-        [result_html, excel_bytes]
+
+        # Generate HTML separately to avoid keeping both in memory
+        if use__format:
+            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
+        else:
+            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x))
+            
+        html_content = df_styled.to_html()
+        del df_styled  # Explicitly delete the styled DataFrame
+        html_content
       `;
 
-      const [htmlResult, excelBytes] = await pyodide.runPythonAsync(pythonCode);
-      setResult(htmlResult);
-      setExcelData(new Uint8Array(excelBytes));
+      const htmlResult = await pyodide.runPythonAsync(pythonCode);
+      resultContainerRef.current.innerHTML = htmlResult;
+      setResult(true); // Just set a flag that we have data available
     } catch (err) {
       console.error("Error running Pandas operation: " + err);
+      setResult(false);
     }
   };
 
@@ -356,7 +377,10 @@ export default function Main() {
                 </Button>
               </div>
               <div className="overflow-x-auto">
-                {result && pyodide && <PyodidePandas />}
+                <div
+                  className="flex p-4 w-full h-full rounded-md border border-separate overflow-y-auto overflow-x-auto [&_table]:border [&_th]:border [&_td]:border [&_td]:px-2 [&_th]:px-2 [&_td]:text-center [&_th]:text-center"
+                  ref={resultContainerRef}
+                ></div>
               </div>
             </>
           )}
