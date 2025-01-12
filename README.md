@@ -17,7 +17,7 @@ The databases have to be in the Apache Parquet (.parquet) format. ADPivot also s
 
 You can use the ADPivot app that's currently hosted on my server in the link: https://datapivot.analyticsdata.pro/
 
-Or you can install [Node.js](https://nodejs.org/en/download), clone the repository, and run locally running these commands sequentially in the project folder (the application will run in http://localhost:3000/): 
+Or you can install [Node.js](https://nodejs.org/en/download), clone the repository, and deploy locally running these commands sequentially in the project folder (the application will run in http://localhost:3000/): 
 
 ```bash
 npm install --force
