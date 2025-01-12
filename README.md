@@ -17,13 +17,20 @@ The databases have to be in the Apache Parquet (.parquet) format. ADP also suppo
 
 You can use ADP that's currently hosted on my personal server in the link: https://datapivot.analyticsdata.pro/
 
-Or you can install [Node.js](https://nodejs.org/en/download), clone the repository, and run locally running these commands in the project folder (the application will run in http://localhost:3000/): 
+Or you can install [Node.js](https://nodejs.org/en/download), clone the repository, and run locally running these commands sequentially in the project folder (the application will run in http://localhost:3000/): 
 
+1
 ```bash
 npm install
+```
 
+2
+```bash
 npm run build
+```
 
+3
+```bash
 npm start
 ```
 
