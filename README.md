@@ -19,17 +19,14 @@ You can use the ADPivot app that's currently hosted on my server in the link: ht
 
 Or you can install [Node.js](https://nodejs.org/en/download), clone the repository, and run locally running these commands sequentially in the project folder (the application will run in http://localhost:3000/): 
 
-1
 ```bash
 npm install --force
 ```
 
-2
 ```bash
 npm run build
 ```
 
-3
 ```bash
 npm start
 ```
