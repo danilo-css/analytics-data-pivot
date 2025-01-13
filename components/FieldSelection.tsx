@@ -47,7 +47,7 @@ export default function FieldSelection() {
               {parentKey.name}
             </div>
           </AccordionTrigger>
-          <AccordionContent className="flex flex-col gap-1 overflow-y-auto max-h-[400px]">
+          <AccordionContent className="flex flex-col gap-1 overflow-y-auto max-h-[400px] px-1">
             {isLoadingFields ? (
               <div className="flex justify-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>

@@ -1,13 +1,4 @@
 import * as React from "react";
-
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { usePivotStore } from "@/stores/usePivotStore";
 
 export function SelectAggregation() {
@@ -15,34 +6,32 @@ export function SelectAggregation() {
   return (
     <>
       {aggregation.type && aggregation.table && aggregation.name && (
-        <Select
+        <select
           value={aggregation.type}
-          onValueChange={(value: typeof aggregation.type) =>
+          onChange={(e) =>
             aggregation.table && aggregation.name
-              ? setAggregation(aggregation.table, aggregation.name, value)
+              ? setAggregation(
+                  aggregation.table,
+                  aggregation.name,
+                  e.target.value as typeof aggregation.type
+                )
               : null
           }
+          className="w-[100px] bg-black px-2 py-1 border rounded cursor-pointer"
         >
-          <SelectTrigger className="w-[100px]">
-            <SelectValue placeholder="Select an aggregation" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="SUM" className="cursor-pointer">
-                SUM
-              </SelectItem>
-              <SelectItem value="AVG" className="cursor-pointer">
-                AVG
-              </SelectItem>
-              <SelectItem value="MIN" className="cursor-pointer">
-                MIN
-              </SelectItem>
-              <SelectItem value="MAX" className="cursor-pointer">
-                MAX
-              </SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+          <option value="SUM" className="cursor-pointer">
+            SUM
+          </option>
+          <option value="AVG" className="cursor-pointer">
+            AVG
+          </option>
+          <option value="MIN" className="cursor-pointer">
+            MIN
+          </option>
+          <option value="MAX" className="cursor-pointer">
+            MAX
+          </option>
+        </select>
       )}
     </>
   );
