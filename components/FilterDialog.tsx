@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePivotStore } from "@/stores/usePivotStore";
+import { Table as Arrow } from "apache-arrow";
 
 export default function FilterDialog({
   table,
@@ -44,7 +45,7 @@ export default function FilterDialog({
   const fetchData = async () => {
     if (db) {
       setLoading(true);
-      const result = await runQuery(
+      const result: Arrow = await runQuery(
         db,
         `
         SELECT DISTINCT "${field}"
@@ -52,8 +53,18 @@ export default function FilterDialog({
         `
       );
 
+      const cleanedData = result.toArray().map((row) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cleanedRow: any = {};
+        for (const [key, value] of Object.entries(row)) {
+          cleanedRow[key] =
+            typeof value === "string" ? value.replace(/"/g, "") : value;
+        }
+        return cleanedRow;
+      });
+
       setValues(
-        JSON.parse(result.toString()).map(
+        cleanedData.map(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (obj: any) => obj[field]?.toString() ?? "(Null)"
         )

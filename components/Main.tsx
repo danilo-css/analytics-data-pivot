@@ -19,6 +19,7 @@ import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { useRelationalStore } from "@/stores/useRelationalStore";
 import RelationalStructure from "./RelationalStructure";
 import { FaLanguage } from "react-icons/fa6";
+import { Table as Arrow } from "apache-arrow";
 
 export default function Main() {
   const { db, runQuery } = useDuckDBStore();
@@ -249,8 +250,19 @@ export default function Main() {
 
     try {
       setIsQueryRunning(true);
-      const result = await runQuery(db, sqlQuery);
-      handleRunPyodide(JSON.parse(result.toString()));
+      const result: Arrow = await runQuery(db, sqlQuery);
+
+      // Convert Arrow table to array and clean string values
+      const cleanedData = result.toArray().map((row) => {
+        const cleanedRow: any = {};
+        for (const [key, value] of Object.entries(row)) {
+          cleanedRow[key] =
+            typeof value === "string" ? value.replace(/"/g, "") : value;
+        }
+        return cleanedRow;
+      });
+
+      handleRunPyodide(cleanedData);
     } catch (error) {
       console.error("Query execution error:", error);
     } finally {
