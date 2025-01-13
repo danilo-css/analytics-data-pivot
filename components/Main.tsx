@@ -137,30 +137,29 @@ export default function Main() {
         )
         .join(", ");
 
-      const relationship_list = relationships.map(
-        (relationship) =>
-          `CAST(TABLE${files.findIndex(
-            (file) => file.name === relationship.primary_table
-          )}."${relationship.primary_key}" AS ${
-            getTypeForColumn(
-              queryFields,
-              relationship.primary_table,
-              relationship.primary_key
-            ) === "Utf8"
-              ? "VARCHAR"
-              : "FLOAT"
-          }) = CAST(TABLE${files.findIndex(
-            (file) => file.name === relationship.foreign_table
-          )}."${relationship.foreign_key}" AS ${
-            getTypeForColumn(
-              queryFields,
-              relationship.foreign_table,
-              relationship.foreign_key
-            ) === "Utf8"
-              ? "VARCHAR"
-              : "FLOAT"
-          })`
-      );
+      const relationship_list = relationships.map((relationship) => {
+        const isPrimaryFloat =
+          getTypeForColumn(
+            queryFields,
+            relationship.primary_table,
+            relationship.primary_key
+          ) !== "Utf8";
+        const isForeignFloat =
+          getTypeForColumn(
+            queryFields,
+            relationship.foreign_table,
+            relationship.foreign_key
+          ) !== "Utf8";
+        const castType = isPrimaryFloat || isForeignFloat ? "FLOAT" : "VARCHAR";
+
+        return `CAST(TABLE${files.findIndex(
+          (file) => file.name === relationship.primary_table
+        )}."${
+          relationship.primary_key
+        }" AS ${castType}) = CAST(TABLE${files.findIndex(
+          (file) => file.name === relationship.foreign_table
+        )}."${relationship.foreign_key}" AS ${castType})`;
+      });
 
       return `
           SELECT ${all_fields_string}, ${aggregation.type}(CAST("${
