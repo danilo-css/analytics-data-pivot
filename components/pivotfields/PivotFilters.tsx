@@ -11,7 +11,7 @@ export default function PivotFilters() {
 
   return (
     <div className="flex flex-row items-center gap-3 border rounded-lg justify-between px-4 py-1">
-      <div className="flex flex-row items-center gap-1">
+      <div className="flex flex-row items-center gap-1 w-[100px]">
         <Filter size={20} />
         <p>Filters</p>
       </div>

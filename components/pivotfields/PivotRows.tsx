@@ -19,7 +19,7 @@ export default function PivotRows() {
 
   return (
     <div className="flex flex-row items-center gap-3 border rounded-lg justify-between px-4 py-1">
-      <div className="flex flex-row items-center gap-1">
+      <div className="flex flex-row items-center gap-1 w-[100px]">
         <Rows3 size={20} />
         <p>Rows</p>
       </div>
