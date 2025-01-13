@@ -68,7 +68,16 @@ export default function Main() {
     }
   }, [files, selectedPreviewFile]);
 
-  const sqlQuery = useMemo(() => {
+  useEffect(() => {
+    const shouldShowPreview = !(
+      files.length >= 1 &&
+      aggregation.name &&
+      (rows.length > 0 || columns.length > 0)
+    );
+    setPreview(shouldShowPreview);
+  }, [files.length, aggregation.name, rows.length, columns.length]);
+
+  const sqlQuery = (() => {
     if (files.length === 0) {
       return null;
     } else if (
@@ -76,8 +85,6 @@ export default function Main() {
       aggregation.name &&
       (rows.length > 0 || columns.length > 0)
     ) {
-      setPreview(false);
-
       const row_list = rows.map((row) => row.name);
       const column_list = columns.map((column) => column.name);
       const all_fields = [...new Set([...row_list, ...column_list])];
@@ -131,9 +138,6 @@ export default function Main() {
       aggregation.name &&
       (rows.length > 0 || columns.length > 0)
     ) {
-      setPreview(false);
-
-      //{files.findIndex((file) => file.name === row.table)}
       const fields = [...rows, ...columns];
 
       const uniqueFields = [
@@ -236,20 +240,9 @@ export default function Main() {
           GROUP BY ${all_fields_string_groupby}
           `;
     } else {
-      setPreview(true);
       return `SELECT * FROM '${selectedPreviewFile}' LIMIT ${previewRows}`;
     }
-  }, [
-    files,
-    rows,
-    columns,
-    aggregation,
-    queryFields,
-    filters,
-    relationships,
-    previewRows,
-    selectedPreviewFile,
-  ]);
+  })();
 
   const handleRunQuery = async () => {
     if (!sqlQuery || !db || isQueryRunning) return;
@@ -434,7 +427,7 @@ export default function Main() {
                     </p>
                   </Button>
                 </div>
-                {preview && (
+                {preview && files.length > 0 && (
                   <div className="flex items-center gap-2">
                     <span>
                       Not enough pivot parameters selected. Click &quot;Run
