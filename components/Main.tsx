@@ -34,6 +34,15 @@ export default function Main() {
   const [isQueryRunning, setIsQueryRunning] = useState(false);
   const [useFormat, setUseFormat] = useState(true);
   const resultContainerRef = useRef<HTMLDivElement>(null);
+  const [preview, setPreview] = useState(false);
+  const PREVIEW_ROW_OPTIONS = [10, 50, 100, 1000] as const;
+  const [previewRows, setPreviewRows] =
+    useState<(typeof PREVIEW_ROW_OPTIONS)[number]>(10);
+  const [selectedPreviewFile, setSelectedPreviewFile] = useState<string>("");
+
+  const handlePreviewRowsChange = (value: string) => {
+    setPreviewRows(Number(value) as (typeof PREVIEW_ROW_OPTIONS)[number]);
+  };
 
   useEffect(() => {
     if (!files || !db) return;
@@ -53,10 +62,22 @@ export default function Main() {
     }
   }, [files, db, runQuery, setQueryFieldsFromFiles]);
 
+  useEffect(() => {
+    if (files.length > 0 && !selectedPreviewFile) {
+      setSelectedPreviewFile(files[0].name);
+    }
+  }, [files, selectedPreviewFile]);
+
   const sqlQuery = useMemo(() => {
     if (files.length === 0) {
       return null;
-    } else if (files.length === 1 && aggregation.name) {
+    } else if (
+      files.length === 1 &&
+      aggregation.name &&
+      (rows.length > 0 || columns.length > 0)
+    ) {
+      setPreview(false);
+
       const row_list = rows.map((row) => row.name);
       const column_list = columns.map((column) => column.name);
       const all_fields = [...new Set([...row_list, ...column_list])];
@@ -105,7 +126,13 @@ export default function Main() {
           }
           GROUP BY ${all_fields_string_groupby}
           `;
-    } else if (files.length > 1 && aggregation.name) {
+    } else if (
+      files.length > 1 &&
+      aggregation.name &&
+      (rows.length > 0 || columns.length > 0)
+    ) {
+      setPreview(false);
+
       //{files.findIndex((file) => file.name === row.table)}
       const fields = [...rows, ...columns];
 
@@ -208,11 +235,21 @@ export default function Main() {
           }
           GROUP BY ${all_fields_string_groupby}
           `;
+    } else {
+      setPreview(true);
+      return `SELECT * FROM '${selectedPreviewFile}' LIMIT ${previewRows}`;
     }
-    return null;
-  }, [files, rows, columns, aggregation, queryFields, filters, relationships]);
-
-  console.log(sqlQuery);
+  }, [
+    files,
+    rows,
+    columns,
+    aggregation,
+    queryFields,
+    filters,
+    relationships,
+    previewRows,
+    selectedPreviewFile,
+  ]);
 
   const handleRunQuery = async () => {
     if (!sqlQuery || !db || isQueryRunning) return;
@@ -257,14 +294,20 @@ export default function Main() {
     try {
       pyodide.globals.set("js_data", queryData);
       pyodide.globals.set("js_filters", filters);
-      pyodide.globals.set("use__format", useFormat);
+      pyodide.globals.set("use_format", useFormat);
+      pyodide.globals.set("preview", preview);
 
       const pythonCode = `
         import io
         df = pd.json_normalize(js_data.to_py())
-        df = df.pivot_table(index=[${rows
-          .map((row) => `'${row.name}'`)
-          .toString()}], columns=[${columns
+
+        if "__index_level_0__" in df.columns:
+          df = df.drop(columns=["__index_level_0__"])
+
+        if not preview:
+          df = df.pivot_table(index=[${rows
+            .map((row) => `'${row.name}'`)
+            .toString()}], columns=[${columns
         .map((column) => `'${column.name}'`)
         .toString()}], values='${aggregation.name}', aggfunc='${
         aggregation.type?.toLowerCase() === "avg"
@@ -279,19 +322,21 @@ export default function Main() {
         else:
             # Save the raw data to Excel first
             # Create filters DataFrame
-            filters_data = js_filters.to_py()
-            filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) for f in filters_data], 
-                                    columns=['Table', 'Field', 'Values'])
+            if not preview:
+              filters_data = js_filters.to_py()
+              filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) for f in filters_data], 
+                                      columns=['Table', 'Field', 'Values'])
             
             with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
                 df.to_excel(writer, sheet_name='Pivot Table')
-                filters_df.to_excel(writer, sheet_name='Filters', index=False)
+                if not preview:
+                  filters_df.to_excel(writer, sheet_name='Filters', index=False)
 
             # Generate HTML separately to avoid keeping both in memory
-            if use__format:
-                df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x).replace(',', '.'))
+            if use_format:
+                df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)).replace(',', '.') if pd.notnull(x) and isinstance(x, (int, float)) else x)
             else:
-                df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(x))
+                df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)) if pd.notnull(x) and isinstance(x, (int, float)) else x)
                 
             html_content = df_styled.to_html()
             del df_styled  # Explicitly delete the styled DataFrame
@@ -299,10 +344,10 @@ export default function Main() {
         # Always save Excel file regardless of size
         with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Pivot Table')
-            filters_df.to_excel(writer, sheet_name='Filters', index=False)
+            if not preview:
+              filters_df.to_excel(writer, sheet_name='Filters', index=False)
 
-        html_content
-      `;
+        html_content      `;
 
       const htmlResult = await pyodide.runPythonAsync(pythonCode);
       resultContainerRef.current.innerHTML = htmlResult;
@@ -345,46 +390,89 @@ export default function Main() {
           {(files.length <= 1 || hasRelationships) && (
             <>
               <PivotFields />
-              <div className="flex flex-row gap-1">
-                <Button
-                  className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-                  disabled={isQueryRunning}
-                  onClick={() => {
-                    handleRunQuery();
-                  }}
-                >
-                  <Play size={20} />
-                  <p>{isQueryRunning ? "Running..." : "Run query"}</p>
-                </Button>
-                {result && (
+              <div className="flex flex-col justify-between gap-1">
+                <div className="flex flex-row gap-1">
                   <Button
-                    onClick={handleDownload}
+                    className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                    disabled={isQueryRunning}
+                    onClick={() => {
+                      handleRunQuery();
+                    }}
+                  >
+                    <Play size={20} />
+                    <p>{isQueryRunning ? "Running..." : "Run query"}</p>
+                  </Button>
+                  {result && (
+                    <Button
+                      onClick={handleDownload}
+                      className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                    >
+                      <PiMicrosoftExcelLogoFill size={20} />
+                      <p>Download Excel</p>
+                    </Button>
+                  )}
+                  {sqlQuery && (
+                    <Button
+                      onClick={() => navigator.clipboard.writeText(sqlQuery)}
+                      className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                    >
+                      <Copy size={20} />
+                      <p>Copy SQL</p>
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => {
+                      setUseFormat(!useFormat);
+                    }}
                     className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
                   >
-                    <PiMicrosoftExcelLogoFill size={20} />
-                    <p>Download Excel</p>
+                    <FaLanguage size={20} />
+                    <p>
+                      {useFormat
+                        ? "Use American Format"
+                        : "Use European Format"}
+                    </p>
                   </Button>
+                </div>
+                {preview && (
+                  <div className="flex items-center gap-2">
+                    <span>
+                      Not enough pivot parameters selected. Click &quot;Run
+                      query&quot; to preview top
+                    </span>
+                    <select
+                      value={previewRows}
+                      onChange={(e) => handlePreviewRowsChange(e.target.value)}
+                      className="w-24 px-2 py-1 border rounded bg-black cursor-pointer"
+                    >
+                      {PREVIEW_ROW_OPTIONS.map((option) => (
+                        <option
+                          key={option}
+                          value={option}
+                          className="cursor-pointer"
+                        >
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    <span>rows of</span>
+                    <select
+                      value={selectedPreviewFile}
+                      onChange={(e) => setSelectedPreviewFile(e.target.value)}
+                      className="px-2 py-1 border rounded bg-black cursor-pointer max-w-[300px] text-ellipsis"
+                    >
+                      {files.map((file) => (
+                        <option
+                          key={file.name}
+                          value={file.name}
+                          className="cursor-pointer overflow-hidden text-ellipsis"
+                        >
+                          {file.name}
+                        </option>
+                      ))}
+                    </select>{" "}
+                  </div>
                 )}
-                {sqlQuery && (
-                  <Button
-                    onClick={() => navigator.clipboard.writeText(sqlQuery)}
-                    className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-                  >
-                    <Copy size={20} />
-                    <p>Copy SQL</p>
-                  </Button>
-                )}
-                <Button
-                  onClick={() => {
-                    setUseFormat(!useFormat);
-                  }}
-                  className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-                >
-                  <FaLanguage size={20} />
-                  <p>
-                    {useFormat ? "Use American Format" : "Use European Format"}
-                  </p>
-                </Button>
               </div>
               <div className="overflow-x-auto">
                 <div
