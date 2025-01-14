@@ -99,7 +99,7 @@ export default function FileManager() {
       import pyarrow.parquet as pq
       import io
       
-      df = pd.read_excel('/tmp/excel_file.xlsx', sheet_name='${sheet}')
+      df = pd.read_excel('/tmp/excel_file.xlsx', sheet_name='${sheet}', dtype=str)
       table = pa.Table.from_pandas(df)
       
       output_buffer = io.BytesIO()
