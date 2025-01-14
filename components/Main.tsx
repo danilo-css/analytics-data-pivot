@@ -328,40 +328,44 @@ export default function Main() {
             df.to_excel(writer, sheet_name=sheet_name)
             worksheet = writer.sheets[sheet_name]
             
-            # Get the range of data
-            start_row = 1
-            start_col = 1
-            end_row = len(df.index) + 1
-            end_col = len(df.columns) + 1 if isinstance(df.columns, pd.MultiIndex) else len(df.columns) + 1
-            
-            # Apply number format and adjust width for all columns
-            for col in range(start_col, end_col + 1):
+            # Get the dimensions of the data
+            all_rows = list(worksheet.rows)
+            if not all_rows:
+                return
+                
+            for col_idx, col in enumerate(worksheet.iter_cols(min_col=1, max_col=len(all_rows[0]), min_row=1), 1):
                 max_length = 0
-                column = worksheet.column_dimensions[chr(64 + col)]
                 
-                for row in range(start_row, end_row + 2):
-                    cell = worksheet.cell(row=row, column=col)
-                    if isinstance(cell.value, (int, float)):
-                        cell.number_format = '#,##0'
-                    
-                    # Update max_length for column width
-                    try:
-                        max_length = max(max_length, len(str(cell.value)))
-                    except:
-                        pass
-                
-                # Set column width
-                column.width = max_length + 4
+                for cell in col:
+                    if cell.value:
+                        try:
+                            max_length = max(max_length, len(str(cell.value)))
+                            if isinstance(cell.value, (int, float)):
+                                cell.number_format = '#,##0'
+                        except:
+                            pass
+                            
+                # Set column width with a minimum of 8 and maximum of 50
+                adjusted_width = min(max(max_length + 2, 8), 50)
+                worksheet.column_dimensions[cell.column_letter].width = adjusted_width
 
         # Save Excel with formatting
         with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
-            format_excel_sheet(writer, df)
+            try:
+                format_excel_sheet(writer, df)
+            except Exception as e:
+                print(f"Error formatting main sheet: {str(e)}")
+                df.to_excel(writer, sheet_name='Pivot Table')
+                
             if not preview and len(js_filters.to_py()) > 0:
-                filters_data = js_filters.to_py()
-                filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) 
-                                        for f in filters_data], 
-                                        columns=['Table', 'Field', 'Values'])
-                format_excel_sheet(writer, filters_df, 'Filters')
+                try:
+                    filters_data = js_filters.to_py()
+                    filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) 
+                                            for f in filters_data], 
+                                            columns=['Table', 'Field', 'Values'])
+                    format_excel_sheet(writer, filters_df, 'Filters')
+                except Exception as e:
+                    print(f"Error formatting filters sheet: {str(e)}")
 
         # Generate HTML
         if use_format:
