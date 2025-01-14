@@ -304,6 +304,7 @@ export default function Main() {
 
       const pythonCode = `
         import io
+        from openpyxl.styles import numbers
         df = pd.json_normalize(js_data.to_py())
 
         if "__index_level_0__" in df.columns:
@@ -312,47 +313,67 @@ export default function Main() {
         if not preview:
           df = df.pivot_table(index=[${rows
             .map((row) => `'${row.name}'`)
-            .toString()}], columns=[${columns
-        .map((column) => `'${column.name}'`)
-        .toString()}], values='${aggregation.name}', aggfunc='${
-        aggregation.type?.toLowerCase() === "avg"
-          ? "mean"
-          : aggregation.type?.toLowerCase()
-      }')
-        
-        # Check table dimensions
-        total_cells = df.shape[0] * df.shape[1]
-        if total_cells >= 50000:
-            html_content = "Table is too big. Download Excel instead."
-        else:
-            # Save the raw data to Excel first
-            # Create filters DataFrame
-            if not preview:
-              filters_data = js_filters.to_py()
-              filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) for f in filters_data], 
-                                      columns=['Table', 'Field', 'Values'])
+            .toString()}], 
+                            columns=[${columns
+                              .map((column) => `'${column.name}'`)
+                              .toString()}], 
+                            values='${aggregation.name}', 
+                            aggfunc='${
+                              aggregation.type?.toLowerCase() === "avg"
+                                ? "mean"
+                                : aggregation.type?.toLowerCase()
+                            }');
+
+        def format_excel_sheet(writer, df, sheet_name='Pivot Table'):
+            df.to_excel(writer, sheet_name=sheet_name)
+            worksheet = writer.sheets[sheet_name]
             
-            with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
-                df.to_excel(writer, sheet_name='Pivot Table')
-                if not preview:
-                  filters_df.to_excel(writer, sheet_name='Filters', index=False)
-
-            # Generate HTML separately to avoid keeping both in memory
-            if use_format:
-                df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)).replace(',', '.') if pd.notnull(x) and isinstance(x, (int, float)) else x)
-            else:
-                df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)) if pd.notnull(x) and isinstance(x, (int, float)) else x)
+            # Get the range of data
+            start_row = 1
+            start_col = 1
+            end_row = len(df.index) + 1
+            end_col = len(df.columns) + 1 if isinstance(df.columns, pd.MultiIndex) else len(df.columns) + 1
+            
+            # Apply number format and adjust width for all columns
+            for col in range(start_col, end_col + 1):
+                max_length = 0
+                column = worksheet.column_dimensions[chr(64 + col)]
                 
-            html_content = df_styled.to_html()
-            del df_styled  # Explicitly delete the styled DataFrame
+                for row in range(start_row, end_row + 2):
+                    cell = worksheet.cell(row=row, column=col)
+                    if isinstance(cell.value, (int, float)):
+                        cell.number_format = '#,##0'
+                    
+                    # Update max_length for column width
+                    try:
+                        max_length = max(max_length, len(str(cell.value)))
+                    except:
+                        pass
+                
+                # Set column width
+                column.width = max_length + 4
 
-        # Always save Excel file regardless of size
+        # Save Excel with formatting
         with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Pivot Table')
-            if not preview:
-              filters_df.to_excel(writer, sheet_name='Filters', index=False)
+            format_excel_sheet(writer, df)
+            if not preview and len(js_filters.to_py()) > 0:
+                filters_data = js_filters.to_py()
+                filters_df = pd.DataFrame([(f['table'], f['field'], ', '.join(f['values'])) 
+                                        for f in filters_data], 
+                                        columns=['Table', 'Field', 'Values'])
+                format_excel_sheet(writer, filters_df, 'Filters')
 
-        html_content      `;
+        # Generate HTML
+        if use_format:
+            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)).replace(',', '.') if pd.notnull(x) and isinstance(x, (int, float)) else x)
+        else:
+            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)) if pd.notnull(x) and isinstance(x, (int, float)) else x)
+            
+        html_content = df_styled.to_html()
+        del df_styled
+
+        html_content
+      `;
 
       const htmlResult = await pyodide.runPythonAsync(pythonCode);
       resultContainerRef.current.innerHTML = htmlResult;
