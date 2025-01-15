@@ -19,7 +19,7 @@ export const usePyodideStore = create<PyodideStore>((set) => ({
 
       // Load Pyodide script
       const script = document.createElement("script");
-      script.src = `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/pyodide.js`;
+      script.src = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/pyodide.js`;
       script.async = true;
       document.body.appendChild(script);
 
@@ -35,7 +35,7 @@ export const usePyodideStore = create<PyodideStore>((set) => ({
                   }) => Promise<PyodideInterface>;
                 }
             ).loadPyodide({
-              indexURL: `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`,
+              indexURL: `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`,
             });
 
             // Install and import pandas
