@@ -20,6 +20,7 @@ import { useRelationalStore } from "@/stores/useRelationalStore";
 import RelationalStructure from "./RelationalStructure";
 import { FaLanguage } from "react-icons/fa6";
 import { Table as Arrow } from "apache-arrow";
+import AnalyticsDataLogo from "./AnalyticsDataLogo";
 
 export default function Main() {
   const { db, runQuery } = useDuckDBStore();
@@ -401,7 +402,8 @@ export default function Main() {
 
   return (
     <main className="relative md:absolute flex flex-col md:flex-row items-center md:items-start justify-center h-full w-full gap-1 py-1 px-1">
-      <section className="relative md:w-fit w-full md:h-full flex flex-col flex-shrink-0 gap-1">
+      <section className="relative md:w-fit w-full md:h-full flex flex-col flex-shrink-0 gap-1 overflow-y-auto">
+        <AnalyticsDataLogo />
         <div className="flex flex-col items-center border rounded-lg py-4 px-4">
           <InitWasm />
           {pyodide && db && <FileManager />}
