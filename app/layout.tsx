@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter as FontSans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fontSans = FontSans({
   subsets: ["latin"],
+  variable: "--font-sans",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const fontHeading = localFont({
+  src: "./assets/fonts/CalSans-SemiBold.woff2",
+  variable: "--font-heading",
 });
 
 export const metadata: Metadata = {
@@ -25,7 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
+        className={cn(
+          "flex flex-col min-h-screen bg-background font-sans antialiased bg-black text-white",
+          fontSans.variable,
+          fontHeading.variable
+        )}
       >
         {children}
       </body>
