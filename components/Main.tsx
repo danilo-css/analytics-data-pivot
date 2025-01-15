@@ -95,7 +95,7 @@ export default function Main() {
             `CAST("${field}" AS ${
               getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
                 ? "VARCHAR"
-                : "FLOAT"
+                : "DOUBLE"
             }) AS "${field}"`
         )
         .join(", ");
@@ -105,7 +105,7 @@ export default function Main() {
             `CAST("${field}" AS ${
               getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
                 ? "VARCHAR"
-                : "FLOAT"
+                : "DOUBLE"
             })`
         )
         .join(", ");
@@ -117,7 +117,7 @@ export default function Main() {
         getTypeForColumn(queryFields, files[0].name, aggregation.name) ===
         "Utf8"
           ? "VARCHAR"
-          : "FLOAT"
+          : "DOUBLE"
       })) AS "${aggregation.name}"
           FROM '${files[0].name}' 
           ${
@@ -152,7 +152,7 @@ export default function Main() {
           }" AS ${
             getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
               ? "VARCHAR"
-              : "FLOAT"
+              : "DOUBLE"
           }) AS "${field.name}"`
       );
 
@@ -164,7 +164,7 @@ export default function Main() {
             )}."${field.name}" AS ${
               getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
                 ? "VARCHAR"
-                : "FLOAT"
+                : "DOUBLE"
             })`
         )
         .join(", ");
@@ -182,7 +182,8 @@ export default function Main() {
             relationship.foreign_table,
             relationship.foreign_key
           ) !== "Utf8";
-        const castType = isPrimaryFloat || isForeignFloat ? "FLOAT" : "VARCHAR";
+        const castType =
+          isPrimaryFloat || isForeignFloat ? "DOUBLE" : "VARCHAR";
 
         return `CAST(TABLE${files.findIndex(
           (file) => file.name === relationship.primary_table
@@ -204,7 +205,7 @@ export default function Main() {
           aggregation.name
         ) === "Utf8"
           ? "VARCHAR"
-          : "FLOAT"
+          : "DOUBLE"
       })) AS "${aggregation.name}"
           FROM '${files[0].name}' AS TABLE0
           JOIN ${files
@@ -261,7 +262,6 @@ export default function Main() {
         }
         return cleanedRow;
       });
-
       handleRunPyodide(cleanedData);
     } catch (error) {
       console.error("Query execution error:", error);

@@ -5,13 +5,6 @@ import { useRelationalStore } from "@/stores/useRelationalStore";
 import { useTableStore } from "@/stores/useTableStore";
 import React, { useState } from "react";
 import { Button } from "./ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function RelationalStructure() {
@@ -69,90 +62,62 @@ export default function RelationalStructure() {
       {isExpanded && (
         <>
           <div className="flex flex-row gap-2">
-            <Select
+            <select
               value={selectedPrimaryTable}
-              onValueChange={setSelectedPrimaryTable}
+              onChange={(e) => setSelectedPrimaryTable(e.target.value)}
+              className="bg-black px-2 py-1 border rounded cursor-pointer"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select primary table" />
-              </SelectTrigger>
-              <SelectContent>
-                {files.slice(0, 1).map((file) => (
-                  <SelectItem
-                    key={file.name}
-                    value={file.name}
-                    className="cursor-pointer"
-                  >
-                    {file.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="">Select primary table</option>
+              {files.slice(0, 1).map((file) => (
+                <option key={file.name} value={file.name}>
+                  {file.name}
+                </option>
+              ))}
+            </select>
 
             {selectedPrimaryTable && (
               <>
-                <Select
+                <select
                   value={selectedPrimaryKey}
-                  onValueChange={setSelectedPrimaryKey}
+                  onChange={(e) => setSelectedPrimaryKey(e.target.value)}
+                  className="bg-black px-2 py-1 border rounded cursor-pointer"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select primary key" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {queryFields[selectedPrimaryTable]?.map((field) => (
-                      <SelectItem
-                        key={field.name}
-                        value={field.name}
-                        className="cursor-pointer"
-                      >
-                        {field.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="">Select primary key</option>
+                  {queryFields[selectedPrimaryTable]?.map((field) => (
+                    <option key={field.name} value={field.name}>
+                      {field.name}
+                    </option>
+                  ))}
+                </select>
 
-                <Select
+                <select
                   value={selectedForeignTable}
-                  onValueChange={setSelectedForeignTable}
+                  onChange={(e) => setSelectedForeignTable(e.target.value)}
+                  className="bg-black px-2 py-1 border rounded cursor-pointer"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select foreign table" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {files
-                      .filter((f) => f.name !== selectedPrimaryTable)
-                      .map((file) => (
-                        <SelectItem
-                          key={file.name}
-                          value={file.name}
-                          className="cursor-pointer"
-                        >
-                          {file.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                  <option value="">Select foreign table</option>
+                  {files
+                    .filter((f) => f.name !== selectedPrimaryTable)
+                    .map((file) => (
+                      <option key={file.name} value={file.name}>
+                        {file.name}
+                      </option>
+                    ))}
+                </select>
 
                 {selectedForeignTable && (
-                  <Select
+                  <select
                     value={selectedForeignKey}
-                    onValueChange={setSelectedForeignKey}
+                    onChange={(e) => setSelectedForeignKey(e.target.value)}
+                    className="bg-black px-2 py-1 border rounded cursor-pointer"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select foreign key" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {queryFields[selectedForeignTable]?.map((field) => (
-                        <SelectItem
-                          key={field.name}
-                          value={field.name}
-                          className="cursor-pointer"
-                        >
-                          {field.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <option value="">Select foreign key</option>
+                    {queryFields[selectedForeignTable]?.map((field) => (
+                      <option key={field.name} value={field.name}>
+                        {field.name}
+                      </option>
+                    ))}
+                  </select>
                 )}
               </>
             )}
