@@ -48,7 +48,7 @@ export default function RelationalStructure() {
   };
 
   return (
-    <div className="flex flex-col gap-4 px-4 border rounded-lg">
+    <div className="flex flex-col gap-4 px-4 border rounded-lg mt-auto">
       <Accordion
         type="single"
         collapsible
