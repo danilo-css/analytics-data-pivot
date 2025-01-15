@@ -16,8 +16,11 @@ export default function PivotFilters() {
         <p>Filters</p>
       </div>
       <div className="flex flex-row flex-wrap items-center gap-2">
-        {filters.map((filter, index) => (
-          <div key={index} className="flex flex-col items-center gap-2">
+        {filters.map((filter) => (
+          <div
+            key={`${filter.table}-${filter.field}`}
+            className="flex flex-col items-center gap-2"
+          >
             <Badge className="flex flex-row items-center gap-2">
               <div className="relative">
                 <Database size={16} />
