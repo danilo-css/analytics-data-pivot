@@ -28,9 +28,8 @@ export default function Main() {
   const { files } = useFileStore();
   const { queryFields, setQueryFieldsFromFiles } = useTableStore();
   const { rows, columns, aggregation, filters } = usePivotStore();
-  const { setResult } = useExcelStore();
   const { relationships } = useRelationalStore();
-  const { result } = useExcelStore();
+  const { result, setResult } = useExcelStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isQueryRunning, setIsQueryRunning] = useState(false);
@@ -417,106 +416,110 @@ export default function Main() {
 
         {files.length > 0 && db && <FieldSelection />}
       </section>
-      <section className="relative w-full md:h-full items-center justify-center overflow-hidden">
-        <div className="flex flex-col gap-1 h-full w-full">
-          {(files.length <= 1 || hasRelationships) && (
-            <>
-              <PivotFields />
-              <div className="flex flex-col justify-between gap-1">
-                <div className="flex flex-row gap-1">
-                  <Button
-                    className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-                    disabled={isQueryRunning}
-                    onClick={() => {
-                      handleRunQuery();
-                    }}
-                  >
-                    <Play size={20} />
-                    <p>{isQueryRunning ? "Running..." : "Run query"}</p>
-                  </Button>
-                  {result && (
+      {pyodide && db && (
+        <section className="relative w-full md:h-full items-center justify-center overflow-hidden">
+          <div className="flex flex-col gap-1 h-full w-full">
+            {(files.length <= 1 || hasRelationships) && (
+              <>
+                <PivotFields />
+                <div className="flex flex-col justify-between gap-1">
+                  <div className="flex flex-row gap-1">
                     <Button
-                      onClick={handleDownload}
+                      className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                      disabled={isQueryRunning}
+                      onClick={() => {
+                        handleRunQuery();
+                      }}
+                    >
+                      <Play size={20} />
+                      <p>{isQueryRunning ? "Running..." : "Run query"}</p>
+                    </Button>
+                    {result && (
+                      <Button
+                        onClick={handleDownload}
+                        className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                      >
+                        <PiMicrosoftExcelLogoFill size={20} />
+                        <p>Download Excel</p>
+                      </Button>
+                    )}
+                    {sqlQuery && (
+                      <Button
+                        onClick={() => navigator.clipboard.writeText(sqlQuery)}
+                        className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                      >
+                        <Copy size={20} />
+                        <p>Copy SQL</p>
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => {
+                        setUseFormat(!useFormat);
+                      }}
                       className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
                     >
-                      <PiMicrosoftExcelLogoFill size={20} />
-                      <p>Download Excel</p>
+                      <FaLanguage size={20} />
+                      <p>
+                        {useFormat
+                          ? "Use American Format"
+                          : "Use European Format"}
+                      </p>
                     </Button>
-                  )}
-                  {sqlQuery && (
-                    <Button
-                      onClick={() => navigator.clipboard.writeText(sqlQuery)}
-                      className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-                    >
-                      <Copy size={20} />
-                      <p>Copy SQL</p>
-                    </Button>
-                  )}
-                  <Button
-                    onClick={() => {
-                      setUseFormat(!useFormat);
-                    }}
-                    className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-                  >
-                    <FaLanguage size={20} />
-                    <p>
-                      {useFormat
-                        ? "Use American Format"
-                        : "Use European Format"}
-                    </p>
-                  </Button>
-                </div>
-                {preview && files.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span>
-                      Not enough pivot parameters selected. Click &quot;Run
-                      query&quot; to preview top
-                    </span>
-                    <select
-                      value={previewRows}
-                      onChange={(e) => handlePreviewRowsChange(e.target.value)}
-                      className="w-24 px-2 py-1 border rounded bg-black cursor-pointer"
-                    >
-                      {PREVIEW_ROW_OPTIONS.map((option) => (
-                        <option
-                          key={option}
-                          value={option}
-                          className="cursor-pointer"
-                        >
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                    <span>rows of</span>
-                    <select
-                      value={selectedPreviewFile}
-                      onChange={(e) => setSelectedPreviewFile(e.target.value)}
-                      className="px-2 py-1 border rounded bg-black cursor-pointer max-w-[300px] text-ellipsis"
-                    >
-                      {files.map((file) => (
-                        <option
-                          key={file.name}
-                          value={file.name}
-                          className="cursor-pointer overflow-hidden text-ellipsis"
-                        >
-                          {file.name}
-                        </option>
-                      ))}
-                    </select>{" "}
                   </div>
-                )}
-              </div>
-              <div className="overflow-x-auto">
-                <div
-                  className="flex p-4 w-full h-full rounded-md border border-separate overflow-y-auto overflow-x-auto [&_table]:border [&_th]:border [&_td]:border [&_td]:px-2 [&_th]:px-2 [&_td]:text-center [&_th]:text-center"
-                  ref={resultContainerRef}
-                ></div>
-              </div>
-            </>
-          )}
-          {files.length > 1 && <RelationalStructure />}
-        </div>
-      </section>
+                  {preview && files.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span>
+                        Not enough pivot parameters selected. Click &quot;Run
+                        query&quot; to preview top
+                      </span>
+                      <select
+                        value={previewRows}
+                        onChange={(e) =>
+                          handlePreviewRowsChange(e.target.value)
+                        }
+                        className="w-24 px-2 py-1 border rounded bg-black cursor-pointer"
+                      >
+                        {PREVIEW_ROW_OPTIONS.map((option) => (
+                          <option
+                            key={option}
+                            value={option}
+                            className="cursor-pointer"
+                          >
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <span>rows of</span>
+                      <select
+                        value={selectedPreviewFile}
+                        onChange={(e) => setSelectedPreviewFile(e.target.value)}
+                        className="px-2 py-1 border rounded bg-black cursor-pointer max-w-[300px] text-ellipsis"
+                      >
+                        {files.map((file) => (
+                          <option
+                            key={file.name}
+                            value={file.name}
+                            className="cursor-pointer overflow-hidden text-ellipsis"
+                          >
+                            {file.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+                <div className="overflow-x-auto">
+                  <div
+                    className="flex p-4 w-full h-full rounded-md border-separate overflow-y-auto overflow-x-auto [&_table]:border [&_th]:border [&_td]:border [&_td]:px-2 [&_th]:px-2 [&_td]:text-right [&_th]:text-center"
+                    ref={resultContainerRef}
+                  ></div>
+                </div>
+              </>
+            )}
+            {files.length > 1 && <RelationalStructure />}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
