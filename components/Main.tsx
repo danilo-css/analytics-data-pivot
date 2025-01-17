@@ -305,6 +305,7 @@ export default function Main() {
       const pythonCode = `
         import io
         from openpyxl.styles import numbers
+        import openpyxl
         df = pd.json_normalize(js_data.to_py())
 
         if "__index_level_0__" in df.columns:
@@ -335,6 +336,7 @@ export default function Main() {
                 
             for col_idx, col in enumerate(worksheet.iter_cols(min_col=1, max_col=len(all_rows[0]), min_row=1), 1):
                 max_length = 0
+                column_letter = None
                 
                 for cell in col:
                     if cell.value:
@@ -342,13 +344,20 @@ export default function Main() {
                             max_length = max(max_length, len(str(cell.value)))
                             if isinstance(cell.value, (int, float)):
                                 cell.number_format = '#,##0'
+                            # Enable text wrapping and center alignment for column headers
+                            if cell.row <= df.columns.nlevels + 1:
+                                cell.alignment = openpyxl.styles.Alignment(wrap_text=True, horizontal='center', vertical='center')  
                         except:
                             pass
+                    # Get column letter from first non-merged cell
+                    if not column_letter and hasattr(cell, 'column_letter'):
+                        column_letter = cell.column_letter
                             
                 # Set column width with a minimum of 8 and maximum of 50
-                adjusted_width = min(max(max_length + 2, 8), 50)
-                worksheet.column_dimensions[cell.column_letter].width = adjusted_width
-
+                if column_letter:
+                    adjusted_width = min(max(max_length + 2, 8), 50)
+                    worksheet.column_dimensions[column_letter].width = adjusted_width
+                    
         # Save Excel with formatting
         with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
             try:
