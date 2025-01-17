@@ -378,9 +378,9 @@ export default function Main() {
 
         # Generate HTML
         if use_format:
-            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)).replace(',', '.') if pd.notnull(x) and isinstance(x, (int, float)) else x)
+            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)).replace(',', '.') if pd.notnull(x) and isinstance(x, (int, float)) else x, na_rep='')
         else:
-            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)) if pd.notnull(x) and isinstance(x, (int, float)) else x)
+            df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)) if pd.notnull(x) and isinstance(x, (int, float)) else x, na_rep='')
             
         html_content = df_styled.to_html()
         del df_styled
