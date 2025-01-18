@@ -23,7 +23,7 @@ export default function InitWasm() {
           <p>Loading DuckDB...</p>
         </div>
       )}
-      {db && (
+      {db && !(db && pyodide) && (
         <div className="flex flex-row items-center">
           <CircleCheck color="#008a35" className="mr-2 h-4 w-4" />
           <p>DuckDB initialized</p>
@@ -41,7 +41,7 @@ export default function InitWasm() {
           <p>Loading Pyodide...</p>
         </div>
       )}
-      {pyodide && (
+      {pyodide && !(db && pyodide) && (
         <div className="flex flex-row items-center">
           <CircleCheck color="#008a35" className="mr-2 h-4 w-4" />
           <p>Pyodide initialized</p>

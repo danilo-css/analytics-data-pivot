@@ -186,7 +186,7 @@ export default function FileManager() {
       </Dialog>
 
       {files.length > 0 && (
-        <ul className="space-y-2">
+        <ul className="space-y-2 max-h-[200px] overflow-y-auto">
           {files.map((file) => (
             <li
               key={file.name}

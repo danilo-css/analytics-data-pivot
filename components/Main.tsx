@@ -21,6 +21,7 @@ import RelationalStructure from "./RelationalStructure";
 import { FaLanguage } from "react-icons/fa6";
 import { Table as Arrow } from "apache-arrow";
 import AnalyticsDataLogo from "./AnalyticsDataLogo";
+import AnalyticsDataInfo from "./AnalyticsDataInfo";
 
 export default function Main() {
   const { db, runQuery } = useDuckDBStore();
@@ -410,7 +411,7 @@ export default function Main() {
 
   return (
     <main className="relative md:absolute flex flex-col md:flex-row items-center md:items-start justify-center h-full w-full gap-1 py-1 px-1">
-      <section className="relative md:w-fit w-full md:h-full flex flex-col flex-shrink-0 gap-1 overflow-y-auto px-1">
+      <section className="relative md:w-fit w-full md:h-full flex flex-col flex-shrink-0 gap-1 px-1">
         <AnalyticsDataLogo />
         <div className="flex flex-col items-center border rounded-lg py-4 px-4">
           <InitWasm />
@@ -424,6 +425,7 @@ export default function Main() {
         </div>
 
         {files.length > 0 && db && <FieldSelection />}
+        <AnalyticsDataInfo />
       </section>
       {pyodide && db && (
         <section className="relative w-full md:h-full items-center justify-center overflow-hidden">
@@ -470,8 +472,8 @@ export default function Main() {
                       <FaLanguage size={20} />
                       <p>
                         {useFormat
-                          ? "Use American Format"
-                          : "Use European Format"}
+                          ? "Use American number format"
+                          : "Use European number format"}
                       </p>
                     </Button>
                   </div>
