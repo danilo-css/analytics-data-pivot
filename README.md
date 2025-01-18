@@ -1,6 +1,6 @@
 # Analytics Data Pivot (ADPivot)
 
-Analytics Data Pivot (ADPivot) is a no-code tool that helps build pivot tables from databases of any size with a few clicks.
+Analytics Data Pivot (ADPivot) is a no code tool that helps build pivot tables from databases of any size with a few clicks.
 
 The databases have to be in the Apache Parquet (.parquet) format. ADPivot also supports uploading Excel spreadsheets (.xlsx), selecting a sheet and converting it to a Parquet file that can be used in the application. Support for CSV files is being considered for future versions.
 
