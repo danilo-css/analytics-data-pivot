@@ -24,12 +24,14 @@ export default function AnalyticsDataInfo() {
             <a
               href="https://github.com/danilo-css/analytics-data-pivot"
               className="hover:text-white"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <FaGithub size={20} />
             </a>
           </div>
           <div className="flex flex-row items-center justify-center gap-2 px-2">
-            <p>Support us: </p>
+            <p>Support this app: </p>
             <a
               href="https://github.com/sponsors/danilo-css"
               target="_blank"

@@ -22,8 +22,10 @@ import { FaLanguage } from "react-icons/fa6";
 import { Table as Arrow } from "apache-arrow";
 import AnalyticsDataLogo from "./AnalyticsDataLogo";
 import AnalyticsDataInfo from "./AnalyticsDataInfo";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Main() {
+  const { toast } = useToast();
   const { db, runQuery } = useDuckDBStore();
   const { pyodide } = usePyodideStore();
   const { files } = useFileStore();
@@ -456,7 +458,14 @@ export default function Main() {
                     )}
                     {sqlQuery && (
                       <Button
-                        onClick={() => navigator.clipboard.writeText(sqlQuery)}
+                        onClick={() => {
+                          navigator.clipboard.writeText(sqlQuery);
+                          toast({
+                            title: "SQL copied to clipboard",
+                            description:
+                              "The SQL query defined by the current parameters has been copied to your clipboard.",
+                          });
+                        }}
                         className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
                       >
                         <Copy size={20} />
@@ -466,6 +475,14 @@ export default function Main() {
                     <Button
                       onClick={() => {
                         setUseFormat(!useFormat);
+                        toast({
+                          title: useFormat
+                            ? "Using American number format"
+                            : "Using European number format",
+                          description: useFormat
+                            ? "Click again to use European number format."
+                            : "Click again to use American number format.",
+                        });
                       }}
                       className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
                     >
@@ -521,7 +538,7 @@ export default function Main() {
                 </div>
                 <div className="overflow-x-auto">
                   <div
-                    className="flex p-4 w-full h-full rounded-md border-separate overflow-y-auto overflow-x-auto [&_table]:border [&_th]:border [&_td]:border [&_td]:px-2 [&_th]:px-2 [&_td]:text-right [&_th]:text-center"
+                    className="flex p-4 w-full h-full rounded-md border-separate overflow-y-auto overflow-x-auto [&_table]:border [&_th]:border [&_td]:border [&_td]:px-2 [&_th]:px-2 [&_td]:text-center [&_th]:text-center"
                     ref={resultContainerRef}
                   ></div>
                 </div>
