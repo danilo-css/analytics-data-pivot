@@ -50,7 +50,7 @@ export default function FilterDialog({
         `
         SELECT DISTINCT "${field}"
         FROM '${table}'
-        `
+        ORDER BY "${field}" ASC`
       );
 
       const cleanedData = result.toArray().map((row) => {
