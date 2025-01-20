@@ -51,4 +51,4 @@ Permanently add your company, website, or GitHub profile link and description he
 
 These are our current sponsors, from latest to earliest:
 
-- [AnalyticsData.Pro](analyticsdata.pro) - Building and deploying data analytics tools that run on the browser.
+- [AnalyticsData.Pro](https://analyticsdata.pro/) - Building and deploying data analytics tools that run on the browser.
