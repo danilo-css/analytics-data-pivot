@@ -1,8 +1,10 @@
 # Analytics Data Pivot (ADPivot)
 
-Analytics Data Pivot (ADPivot) is a no-code tool that helps build pivot tables from databases of any size with a few clicks.
+Analytics Data Pivot (ADPivot) is a no code tool that helps build pivot tables from databases of any size with a few clicks.
 
-The databases have to be in the Apache Parquet (.parquet) format. ADPivot also supports uploading Excel spreadsheets (.xlsx), selecting a sheet and converting it to a Parquet file that can be used in the application.
+The databases have to be in the Apache Parquet (.parquet) format. ADPivot also supports uploading Excel spreadsheets (.xlsx), selecting a sheet and converting it to a Parquet file that can be used in the application. Support for CSV files is being considered for future versions.
+
+![ADPivot](public/adpivot_snapshot.png)
 
 ## ADPivot advantages
 
@@ -35,7 +37,7 @@ You can also deploy ADPivot to your own server. This requires knowledge of [Dock
 
 ## Contribute
 
-If ADPivot is useful to you, you can help me keep the app up on my server and develop it further by making a donation through [this link](). I'm also open to freelancing gigs using the tech stack of this application. You can reach out to me through 
+If ADPivot is useful to you, you can help me keep the app up on my server and develop it further by making a donation through [this link](https://github.com/sponsors/danilo-css). I'm also open to freelancing gigs using the tech stack of this application. You can reach out to me through the e-mail [contact@analyticsdata.pro](mailto:contact@analyticsdata.pro).
 
 If you're a user with no coding experience you can open an [issue](https://github.com/danilo-css/analytics-data-pivot/issues) and try to explain bugs or suggestions you might have to enhance the application.
 

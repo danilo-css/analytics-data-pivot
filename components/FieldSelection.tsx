@@ -29,7 +29,7 @@ export default function FieldSelection() {
   };
 
   return (
-    <Accordion type="single" collapsible>
+    <Accordion type="single" collapsible className="overflow-y-auto">
       {files?.map((parentKey: File, index: number) => (
         <AccordionItem
           key={parentKey.name}
