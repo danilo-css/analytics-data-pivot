@@ -13,7 +13,7 @@ The databases have to be in the Apache Parquet (.parquet) format. ADPivot also s
 - **Relational**. Multiple databases can be added to allow relational database analytics.
 - **MultiIndex**. The resulting pivot table then can be visualized or downloaded preserving the MultiIndex (hierarchical index) structure defined in the application.
 - **Fast**. Under the hood, ADPivot uses [WebAssembly](https://webassembly.org/) [DuckDB](https://github.com/duckdb/duckdb-wasm) and [Pyodide](https://github.com/pyodide/pyodide) for maximum querying performance. On the front-end side, [React](https://github.com/facebook/react) and [Next.js](https://github.com/vercel/next.js) provide the best UI performance.
-- **Open-source and free:** ADPivot is completely open-source licensed under the Apache 2.0 license.
+- **Open-source and free:** ADPivot is completely open-source licensed under the MIT license.
 
 See the [launch article](https://analyticsdata.pro/blog/Analytics%20Data%20Pivot%20(ADPivot)%20launch) for further details. 
 
