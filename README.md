@@ -39,8 +39,16 @@ You can also deploy ADPivot to your own server. This requires knowledge of [Dock
 
 ## Contribute
 
-If ADPivot is useful to you, you can help me keep the app up on my server and develop it further by making a donation through [this link](https://github.com/sponsors/danilo-css). I'm also open to freelancing gigs using the tech stack of this application. You can reach out to me through the e-mail [contact@analyticsdata.pro](mailto:contact@analyticsdata.pro).
+If ADPivot is useful to you, you can help me keep the app up on my server and develop it further by making a donation through [GitHub sponsor program](https://github.com/sponsors/danilo-css?frequency=one-time&sponsor=danilo-css) or through [PayPal](https://www.paypal.com/donate/?business=VM8L5KP6R5FQY&no_recurring=0&item_name=Thank+you+for+donating.+Your+money+goes+toward+covering+server+expenses+and+developing+the+app+further.&currency_code=USD). I'm also open to freelancing gigs using the tech stack of this application. You can reach out to me through the e-mail [contact@analyticsdata.pro](mailto:contact@analyticsdata.pro).
 
 If you're a user with no coding experience you can open an [issue](https://github.com/danilo-css/analytics-data-pivot/issues) and try to explain bugs or suggestions you might have to enhance the application.
 
 If you're a developer and want to contribute with code, I currently don't have much time to review [pull requests](https://github.com/danilo-css/analytics-data-pivot/pulls), but your pull request will be considered if you can explain clearly what the purpose is, how it is done and it clearly solves a bug or improves features of the application using React, Next.js, TypeScript and the other core dependencies that were used to build the app.
+
+## Sponsors
+
+Permanently add your company, website, or GitHub profile link and description here in this README section by [becoming a one-time sponsor](https://github.com/sponsors/danilo-css?frequency=one-time&sponsor=danilo-css) of this open-source project.
+
+These are our current sponsors, from latest to earliest:
+
+- [AnalyticsData.Pro](analyticsdata.pro) - Building and deploying data analytics tools that run on the browser.
