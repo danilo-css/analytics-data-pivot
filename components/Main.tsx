@@ -68,7 +68,13 @@ export default function Main() {
 
   useEffect(() => {
     if (files.length > 0) {
-      setSelectedPreviewFile(files[0].name);
+      // If current selection is no longer in files list, select first available file
+      if (!files.some((file) => file.name === selectedPreviewFile)) {
+        setSelectedPreviewFile(files[0].name);
+      }
+    } else {
+      // Clear selection when no files remain
+      setSelectedPreviewFile("");
     }
   }, [files, selectedPreviewFile]);
 
