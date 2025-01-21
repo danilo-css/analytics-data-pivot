@@ -67,7 +67,7 @@ export default function Main() {
   }, [files, db, runQuery, setQueryFieldsFromFiles]);
 
   useEffect(() => {
-    if (files.length > 0 && !selectedPreviewFile) {
+    if (files.length > 0) {
       setSelectedPreviewFile(files[0].name);
     }
   }, [files, selectedPreviewFile]);
