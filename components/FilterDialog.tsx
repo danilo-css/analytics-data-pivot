@@ -7,7 +7,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useDuckDBStore } from "@/stores/useDuckDBStore";
-import { ChevronLeft, ChevronRight, Filter, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Loader2,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 import {
@@ -113,7 +120,7 @@ export default function FilterDialog({
       <DialogTrigger>
         <Filter size={20} className="cursor-pointer hover:text-black" />
       </DialogTrigger>
-      <DialogContent className="bg-gray-700">
+      <DialogContent className="bg-gray-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add filter</DialogTitle>
           <DialogDescription className="text-white">
@@ -177,7 +184,13 @@ export default function FilterDialog({
               </TableBody>
             </Table>
           </div>
-          <div className="flex justify-between items-center text-white">
+          <div className="flex justify-between items-center text-white gap-2">
+            <Button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronsLeft />
+            </Button>
             <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
@@ -194,6 +207,12 @@ export default function FilterDialog({
               disabled={currentPage === totalPages}
             >
               <ChevronRight />
+            </Button>
+            <Button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronsRight />
             </Button>
           </div>
           <p className="text-wrap break-all">
