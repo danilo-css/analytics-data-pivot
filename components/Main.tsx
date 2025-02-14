@@ -501,7 +501,7 @@ export default function Main() {
                     </Button>
                   </div>
                   {preview && files.length > 0 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center flex-wrap gap-2">
                       <span>
                         Not enough pivot parameters selected. Click &quot;Run
                         query&quot; to preview top
