@@ -28,6 +28,13 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePivotStore } from "@/stores/usePivotStore";
 import { Table as Arrow } from "apache-arrow";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Separator } from "./ui/separator";
 
 export default function FilterDialog({
   table,
@@ -47,6 +54,7 @@ export default function FilterDialog({
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const itemsPerPage = 10;
 
   const fetchData = async () => {
@@ -215,12 +223,31 @@ export default function FilterDialog({
               <ChevronsRight />
             </Button>
           </div>
-          <p className="text-wrap break-all">
-            Selected values: {`[${selectedValues}]`}
-          </p>
           <Button onClick={handleSubmit} className="mt-4">
             Apply Filter
           </Button>
+          <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
+            <CollapsibleTrigger className="flex items-center justify-between w-full text-white p-2 hover:bg-gray-600 rounded-md">
+              <span>Selected values ({selectedValues.length})</span>
+              {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <ul className="space-y-1">
+                {selectedValues.map((value, index) => (
+                  <>
+                    <Separator orientation="horizontal" />
+                    <li
+                      key={index}
+                      className="text-white px-2 py-1 w-full text-ellipsis break-all"
+                      title={value}
+                    >
+                      {value}
+                    </li>
+                  </>
+                ))}
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </DialogContent>
     </Dialog>
