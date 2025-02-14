@@ -441,8 +441,8 @@ export default function Main() {
             {(files.length <= 1 || hasRelationships) && (
               <>
                 <PivotFields />
-                <div className="flex flex-col justify-between gap-1">
-                  <div className="flex flex-row gap-1">
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-row items-center justify-center lg:justify-start flex-wrap gap-1">
                     <Button
                       className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
                       disabled={isQueryRunning}

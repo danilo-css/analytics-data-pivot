@@ -29,9 +29,9 @@ export default function PivotColumns() {
         <Columns3 size={20} />
         <p>Columns</p>
       </div>
-      <div className="flex flex-row flex-wrap items-center gap-2">
+      <div className="flex flex-row flex-wrap items-center gap-2 justify-center">
         {columns.map((column, index) => (
-          <div key={index} className="flex flex-col items-start gap-2">
+          <div key={index} className="flex flex-col items-center gap-2">
             <Badge className="flex flex-row items-center gap-2">
               <div className="relative">
                 <Database size={16} />
@@ -68,7 +68,7 @@ export default function PivotColumns() {
       <Trash2
         onClick={clearColumns}
         size={24}
-        className="cursor-pointer hover:text-blue-500"
+        className="cursor-pointer hover:text-blue-500 min-w-[24px]"
       />
     </div>
   );

@@ -9,7 +9,7 @@ export default function Aggregation() {
   const { aggregation, clearAggregation } = usePivotStore();
   const { files } = useFileStore();
   return (
-    <div className="flex flex-col items-center gap-3 border rounded-lg px-4 py-1 h-full w-full">
+    <div className="flex flex-col items-center gap-3 border rounded-lg px-4 py-1 h-fit w-full">
       <div className="flex flex-row items-center gap-1">
         <SquareSigma size={20} />
         <p>Aggregation</p>

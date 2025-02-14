@@ -15,7 +15,7 @@ export default function PivotFilters() {
         <Filter size={20} />
         <p>Filters</p>
       </div>
-      <div className="flex flex-row flex-wrap items-center gap-2">
+      <div className="flex flex-row flex-wrap items-center gap-2 justify-center">
         {filters.map((filter) => (
           <div
             key={`${filter.table}-${filter.field}`}
@@ -42,7 +42,7 @@ export default function PivotFilters() {
       <Trash2
         onClick={clearFilters}
         size={24}
-        className="cursor-pointer hover:text-blue-500"
+        className="cursor-pointer hover:text-blue-500 min-w-[24px]"
       />
     </div>
   );
