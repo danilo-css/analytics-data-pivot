@@ -7,7 +7,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useDuckDBStore } from "@/stores/useDuckDBStore";
-import { ChevronLeft, ChevronRight, Filter, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Loader2,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 import {
@@ -21,6 +28,13 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePivotStore } from "@/stores/usePivotStore";
 import { Table as Arrow } from "apache-arrow";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Separator } from "./ui/separator";
 
 export default function FilterDialog({
   table,
@@ -40,6 +54,7 @@ export default function FilterDialog({
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const itemsPerPage = 10;
 
   const fetchData = async () => {
@@ -113,7 +128,7 @@ export default function FilterDialog({
       <DialogTrigger>
         <Filter size={20} className="cursor-pointer hover:text-black" />
       </DialogTrigger>
-      <DialogContent className="bg-gray-700">
+      <DialogContent className="bg-gray-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add filter</DialogTitle>
           <DialogDescription className="text-white">
@@ -177,7 +192,13 @@ export default function FilterDialog({
               </TableBody>
             </Table>
           </div>
-          <div className="flex justify-between items-center text-white">
+          <div className="flex justify-between items-center text-white gap-2">
+            <Button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronsLeft />
+            </Button>
             <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
@@ -195,13 +216,38 @@ export default function FilterDialog({
             >
               <ChevronRight />
             </Button>
+            <Button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronsRight />
+            </Button>
           </div>
-          <p className="text-wrap break-all">
-            Selected values: {`[${selectedValues}]`}
-          </p>
           <Button onClick={handleSubmit} className="mt-4">
             Apply Filter
           </Button>
+          <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
+            <CollapsibleTrigger className="flex items-center justify-between w-full text-white p-2 hover:bg-gray-600 rounded-md">
+              <span>Selected values ({selectedValues.length})</span>
+              {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <ul className="space-y-1">
+                {selectedValues.map((value, index) => (
+                  <>
+                    <Separator orientation="horizontal" />
+                    <li
+                      key={index}
+                      className="text-white px-2 py-1 w-full text-ellipsis break-all"
+                      title={value}
+                    >
+                      {value}
+                    </li>
+                  </>
+                ))}
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </DialogContent>
     </Dialog>
