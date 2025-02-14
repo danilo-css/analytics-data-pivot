@@ -56,7 +56,7 @@ export default function FilterDialog({
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [open, setOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const itemsPerPage = 10;
 
   const fetchData = async () => {
