@@ -60,7 +60,7 @@ export default function RelationalStructure() {
             Table Relationships
           </AccordionTrigger>
           <AccordionContent>
-            <div className="flex flex-row gap-2">
+            <div className="flex flex-row flex-wrap gap-2">
               <select
                 value={selectedPrimaryTable}
                 onChange={(e) => setSelectedPrimaryTable(e.target.value)}
