@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Separator } from "./ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 export default function FilterDialog({
   table,
@@ -43,6 +44,7 @@ export default function FilterDialog({
   table: string;
   field: string;
 }) {
+  const { toast } = useToast();
   const { db, runQuery } = useDuckDBStore();
   const { filters, addFilter } = usePivotStore();
   const [loading, setLoading] = useState(false);
@@ -107,6 +109,10 @@ export default function FilterDialog({
 
   const handleSubmit = () => {
     addFilter(table, field, selectedValues);
+    toast({
+      title: "Filter Applied",
+      description: `Successfully applied filter for ${field}`,
+    });
   };
 
   const clearAll = () => {
@@ -234,16 +240,15 @@ export default function FilterDialog({
             <CollapsibleContent className="mt-2">
               <ul className="space-y-1">
                 {selectedValues.map((value, index) => (
-                  <>
+                  <div key={index}>
                     <Separator orientation="horizontal" />
                     <li
-                      key={index}
                       className="text-white px-2 py-1 w-full text-ellipsis break-all"
                       title={value}
                     >
                       {value}
                     </li>
-                  </>
+                  </div>
                 ))}
               </ul>
             </CollapsibleContent>
