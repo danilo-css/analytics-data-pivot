@@ -318,21 +318,10 @@ export default function Main() {
         df = pd.json_normalize(js_data.to_py())
 
         if "__index_level_0__" in df.columns:
-          df = df.drop(columns=["__index_level_0__"])
+            df = df.drop(columns=["__index_level_0__"])
 
         if not preview:
-          df = df.pivot_table(index=[${rows
-            .map((row) => `'${row.name}'`)
-            .toString()}], 
-                            columns=[${columns
-                              .map((column) => `'${column.name}'`)
-                              .toString()}], 
-                            values='${aggregation.name}', 
-                            aggfunc='${
-                              aggregation.type?.toLowerCase() === "avg"
-                                ? "mean"
-                                : aggregation.type?.toLowerCase()
-                            }');
+            df = ${getPivotCode()}
 
         def format_excel_sheet(writer, df, sheet_name='Pivot Table'):
             df.to_excel(writer, sheet_name=sheet_name)
@@ -406,6 +395,28 @@ export default function Main() {
     }
   };
 
+  const getPivotCode = () => {
+    if (
+      !preview &&
+      aggregation.name &&
+      (rows.length > 0 || columns.length > 0)
+    ) {
+      return `df.pivot_table(index=[${rows
+        .map((row) => `'${row.name}'`)
+        .toString()}], 
+                  columns=[${columns
+                    .map((column) => `'${column.name}'`)
+                    .toString()}], 
+                  values='${aggregation.name}', 
+                  aggfunc='${
+                    aggregation.type?.toLowerCase() === "avg"
+                      ? "mean"
+                      : aggregation.type?.toLowerCase()
+                  }')`;
+    }
+    return null;
+  };
+
   const hasRelationships = useMemo(
     () =>
       files.every((file) =>
@@ -463,20 +474,38 @@ export default function Main() {
                       </Button>
                     )}
                     {sqlQuery && (
-                      <Button
-                        onClick={() => {
-                          navigator.clipboard.writeText(sqlQuery);
-                          toast({
-                            title: "SQL copied to clipboard",
-                            description:
-                              "The SQL query defined by the current parameters has been copied to your clipboard.",
-                          });
-                        }}
-                        className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-                      >
-                        <Copy size={20} />
-                        <p>Copy SQL</p>
-                      </Button>
+                      <>
+                        <Button
+                          onClick={() => {
+                            navigator.clipboard.writeText(sqlQuery);
+                            toast({
+                              title: "SQL copied to clipboard",
+                              description:
+                                "The SQL query defined by the current parameters has been copied to your clipboard.",
+                            });
+                          }}
+                          className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                        >
+                          <Copy size={20} />
+                          <p>Copy SQL</p>
+                        </Button>
+                        {!preview && getPivotCode() && (
+                          <Button
+                            onClick={() => {
+                              navigator.clipboard.writeText(getPivotCode()!);
+                              toast({
+                                title: "Pandas pivot code copied to clipboard",
+                                description:
+                                  "The pandas pivot table code has been copied to your clipboard.",
+                              });
+                            }}
+                            className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                          >
+                            <Copy size={20} />
+                            <p>Copy Pandas Pivot Code</p>
+                          </Button>
+                        )}
+                      </>
                     )}
                     <Button
                       onClick={() => {
