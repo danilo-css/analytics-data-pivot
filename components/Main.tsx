@@ -318,27 +318,16 @@ export default function Main() {
         df = pd.json_normalize(js_data.to_py())
 
         if "__index_level_0__" in df.columns:
-          df = df.drop(columns=["__index_level_0__"])
+            df = df.drop(columns=["__index_level_0__"])
 
         if not preview:
-          df = df.pivot_table(index=[${rows
-            .map((row) => `'${row.name}'`)
-            .toString()}], 
-                            columns=[${columns
-                              .map((column) => `'${column.name}'`)
-                              .toString()}], 
-                            values='${aggregation.name}', 
-                            aggfunc='${
-                              aggregation.type?.toLowerCase() === "avg"
-                                ? "mean"
-                                : aggregation.type?.toLowerCase()
-                            }');
+            df = ${getPivotCode()}
 
         def format_excel_sheet(writer, df, sheet_name='Pivot Table'):
             df.to_excel(writer, sheet_name=sheet_name)
             worksheet = writer.sheets[sheet_name]
             
-            # Get the dimensions of the data
+            // Get the dimensions of the data
             all_rows = list(worksheet.rows)
             if not all_rows:
                 return
@@ -353,21 +342,21 @@ export default function Main() {
                             max_length = max(max_length, len(str(cell.value)))
                             if isinstance(cell.value, (int, float)):
                                 cell.number_format = '#,##0'
-                            # Enable text wrapping and center alignment for column headers
+                            // Enable text wrapping and center alignment for column headers
                             if cell.row <= df.columns.nlevels + 1:
                                 cell.alignment = openpyxl.styles.Alignment(wrap_text=True, horizontal='center', vertical='center')  
                         except:
                             pass
-                    # Get column letter from first non-merged cell
+                    // Get column letter from first non-merged cell
                     if not column_letter and hasattr(cell, 'column_letter'):
                         column_letter = cell.column_letter
                             
-                # Set column width with a minimum of 8 and maximum of 50
+                // Set column width with a minimum of 8 and maximum of 50
                 if column_letter:
                     adjusted_width = min(max(max_length + 2, 8), 50)
                     worksheet.column_dimensions[column_letter].width = adjusted_width
                     
-        # Save Excel with formatting
+        // Save Excel with formatting
         with pd.ExcelWriter('/excel_output.xlsx', engine='openpyxl') as writer:
             try:
                 format_excel_sheet(writer, df)
@@ -385,7 +374,7 @@ export default function Main() {
                 except Exception as e:
                     print(f"Error formatting filters sheet: {str(e)}")
 
-        # Generate HTML
+        // Generate HTML
         if use_format:
             df_styled = df.style.format(formatter=lambda x: '{:,.0f}'.format(float(x)).replace(',', '.') if pd.notnull(x) and isinstance(x, (int, float)) else x, na_rep='')
         else:
@@ -404,6 +393,28 @@ export default function Main() {
       console.error("Error running Pandas operation: " + err);
       setResult(false);
     }
+  };
+
+  const getPivotCode = () => {
+    if (
+      !preview &&
+      aggregation.name &&
+      (rows.length > 0 || columns.length > 0)
+    ) {
+      return `df.pivot_table(index=[${rows
+        .map((row) => `'${row.name}'`)
+        .toString()}], 
+                  columns=[${columns
+                    .map((column) => `'${column.name}'`)
+                    .toString()}], 
+                  values='${aggregation.name}', 
+                  aggfunc='${
+                    aggregation.type?.toLowerCase() === "avg"
+                      ? "mean"
+                      : aggregation.type?.toLowerCase()
+                  }')`;
+    }
+    return null;
   };
 
   const hasRelationships = useMemo(
@@ -463,20 +474,38 @@ export default function Main() {
                       </Button>
                     )}
                     {sqlQuery && (
-                      <Button
-                        onClick={() => {
-                          navigator.clipboard.writeText(sqlQuery);
-                          toast({
-                            title: "SQL copied to clipboard",
-                            description:
-                              "The SQL query defined by the current parameters has been copied to your clipboard.",
-                          });
-                        }}
-                        className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
-                      >
-                        <Copy size={20} />
-                        <p>Copy SQL</p>
-                      </Button>
+                      <>
+                        <Button
+                          onClick={() => {
+                            navigator.clipboard.writeText(sqlQuery);
+                            toast({
+                              title: "SQL copied to clipboard",
+                              description:
+                                "The SQL query defined by the current parameters has been copied to your clipboard.",
+                            });
+                          }}
+                          className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                        >
+                          <Copy size={20} />
+                          <p>Copy SQL</p>
+                        </Button>
+                        {!preview && getPivotCode() && (
+                          <Button
+                            onClick={() => {
+                              navigator.clipboard.writeText(getPivotCode()!);
+                              toast({
+                                title: "Pandas pivot code copied to clipboard",
+                                description:
+                                  "The pandas pivot table code has been copied to your clipboard.",
+                              });
+                            }}
+                            className="flex flex-row gap-1 py-1 px-2 rounded-md w-fit"
+                          >
+                            <Copy size={20} />
+                            <p>Copy Pandas Pivot Code</p>
+                          </Button>
+                        )}
+                      </>
                     )}
                     <Button
                       onClick={() => {
