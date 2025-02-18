@@ -23,6 +23,7 @@ import { Table as Arrow } from "apache-arrow";
 import AnalyticsDataLogo from "./AnalyticsDataLogo";
 import AnalyticsDataInfo from "./AnalyticsDataInfo";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "sql-formatter";
 
 export default function Main() {
   const { toast } = useToast();
@@ -88,85 +89,74 @@ export default function Main() {
   }, [files.length, aggregation.name, rows.length, columns.length]);
 
   const sqlQuery = (() => {
-    if (files.length === 0) {
-      return null;
-    } else if (
-      files.length === 1 &&
-      aggregation.name &&
-      (rows.length > 0 || columns.length > 0)
-    ) {
-      const row_list = rows.map((row) => row.name);
-      const column_list = columns.map((column) => column.name);
-      const all_fields = [...new Set([...row_list, ...column_list])];
-      const all_fields_string = all_fields
-        .map(
-          (field) =>
-            `CAST("${field}" AS ${
-              getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
-                ? "VARCHAR"
-                : "DOUBLE"
-            }) AS "${field}"`
-        )
-        .join(", ");
-      const all_fields_string_groupby = all_fields
-        .map(
-          (field) =>
-            `CAST("${field}" AS ${
-              getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
-                ? "VARCHAR"
-                : "DOUBLE"
-            })`
-        )
-        .join(", ");
+    const generateQuery = () => {
+      if (files.length === 0) {
+        return null;
+      } else if (
+        files.length === 1 &&
+        aggregation.name &&
+        (rows.length > 0 || columns.length > 0)
+      ) {
+        const row_list = rows.map((row) => row.name);
+        const column_list = columns.map((column) => column.name);
+        const all_fields = [...new Set([...row_list, ...column_list])];
+        const all_fields_string = all_fields
+          .map(
+            (field) =>
+              `CAST("${field}" AS ${
+                getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
+                  ? "VARCHAR"
+                  : "DOUBLE"
+              }) AS "${field}"`
+          )
+          .join(", ");
+        const all_fields_string_groupby = all_fields
+          .map(
+            (field) =>
+              `CAST("${field}" AS ${
+                getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
+                  ? "VARCHAR"
+                  : "DOUBLE"
+              })`
+          )
+          .join(", ");
 
-      return `
-          SELECT ${all_fields_string}, ${aggregation.type}(CAST("${
-        aggregation.name
-      }" AS ${
-        getTypeForColumn(queryFields, files[0].name, aggregation.name) ===
-        "Utf8"
-          ? "VARCHAR"
-          : "DOUBLE"
-      })) AS "${aggregation.name}"
-          FROM '${files[0].name}' 
-          ${
-            filters.length > 0
-              ? `WHERE ${filters
-                  .map(
-                    (filter) =>
-                      `"${filter.field}" IN (${filter.values
-                        .map((value) => `'${value}'`)
-                        .join(", ")})`
-                  )
-                  .join(" AND ")}`
-              : ""
-          }
-          GROUP BY ${all_fields_string_groupby}
-          `;
-    } else if (
-      files.length > 1 &&
-      aggregation.name &&
-      (rows.length > 0 || columns.length > 0)
-    ) {
-      const fields = [...rows, ...columns];
+        return `
+            SELECT ${all_fields_string}, ${aggregation.type}(CAST("${
+          aggregation.name
+        }" AS ${
+          getTypeForColumn(queryFields, files[0].name, aggregation.name) ===
+          "Utf8"
+            ? "VARCHAR"
+            : "DOUBLE"
+        })) AS "${aggregation.name}"
+            FROM '${files[0].name}' 
+            ${
+              filters.length > 0
+                ? `WHERE ${filters
+                    .map(
+                      (filter) =>
+                        `"${filter.field}" IN (${filter.values
+                          .map((value) => `'${value}'`)
+                          .join(", ")})`
+                    )
+                    .join(" AND ")}`
+                : ""
+            }
+            GROUP BY ${all_fields_string_groupby}
+            `;
+      } else if (
+        files.length > 1 &&
+        aggregation.name &&
+        (rows.length > 0 || columns.length > 0)
+      ) {
+        const fields = [...rows, ...columns];
 
-      const uniqueFields = [
-        ...new Set(fields.map((field) => JSON.stringify(field))),
-      ].map((str) => JSON.parse(str));
+        const uniqueFields = [
+          ...new Set(fields.map((field) => JSON.stringify(field))),
+        ].map((str) => JSON.parse(str));
 
-      const all_fields_string = uniqueFields.map(
-        (field) =>
-          `CAST(TABLE${files.findIndex((file) => file.name === field.table)}."${
-            field.name
-          }" AS ${
-            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
-              ? "VARCHAR"
-              : "DOUBLE"
-          }) AS "${field.name}"`
-      );
-
-      const all_fields_string_groupby = uniqueFields
-        .map(
+        const all_fields_string = uniqueFields.map(
           (field) =>
             `CAST(TABLE${files.findIndex(
               (file) => file.name === field.table
@@ -174,85 +164,102 @@ export default function Main() {
               getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
                 ? "VARCHAR"
                 : "DOUBLE"
-            })`
-        )
-        .join(", ");
+            }) AS "${field.name}"`
+        );
 
-      const relationship_list = relationships.map((relationship) => {
-        const isPrimaryFloat =
-          getTypeForColumn(
-            queryFields,
-            relationship.primary_table,
+        const all_fields_string_groupby = uniqueFields
+          .map(
+            (field) =>
+              `CAST(TABLE${files.findIndex(
+                (file) => file.name === field.table
+              )}."${field.name}" AS ${
+                getTypeForColumn(queryFields, field.table, field.name) ===
+                "Utf8"
+                  ? "VARCHAR"
+                  : "DOUBLE"
+              })`
+          )
+          .join(", ");
+
+        const relationship_list = relationships.map((relationship) => {
+          const isPrimaryFloat =
+            getTypeForColumn(
+              queryFields,
+              relationship.primary_table,
+              relationship.primary_key
+            ) !== "Utf8";
+          const isForeignFloat =
+            getTypeForColumn(
+              queryFields,
+              relationship.foreign_table,
+              relationship.foreign_key
+            ) !== "Utf8";
+          const castType =
+            isPrimaryFloat || isForeignFloat ? "DOUBLE" : "VARCHAR";
+
+          return `CAST(TABLE${files.findIndex(
+            (file) => file.name === relationship.primary_table
+          )}."${
             relationship.primary_key
-          ) !== "Utf8";
-        const isForeignFloat =
+          }" AS ${castType}) = CAST(TABLE${files.findIndex(
+            (file) => file.name === relationship.foreign_table
+          )}."${relationship.foreign_key}" AS ${castType})`;
+        });
+
+        return `
+            SELECT ${all_fields_string}, ${aggregation.type}(CAST("${
+          aggregation.name
+        }" AS ${
           getTypeForColumn(
             queryFields,
-            relationship.foreign_table,
-            relationship.foreign_key
-          ) !== "Utf8";
-        const castType =
-          isPrimaryFloat || isForeignFloat ? "DOUBLE" : "VARCHAR";
-
-        return `CAST(TABLE${files.findIndex(
-          (file) => file.name === relationship.primary_table
-        )}."${
-          relationship.primary_key
-        }" AS ${castType}) = CAST(TABLE${files.findIndex(
-          (file) => file.name === relationship.foreign_table
-        )}."${relationship.foreign_key}" AS ${castType})`;
-      });
-
-      return `
-          SELECT ${all_fields_string}, ${aggregation.type}(CAST("${
-        aggregation.name
-      }" AS ${
-        getTypeForColumn(
-          queryFields,
-          files[files.findIndex((file) => file.name === aggregation.table)]
-            .name,
-          aggregation.name
-        ) === "Utf8"
-          ? "VARCHAR"
-          : "DOUBLE"
-      })) AS "${aggregation.name}"
-          FROM '${files[0].name}' AS TABLE0
-          JOIN ${files
-            .slice(1)
-            .map(
-              (file) =>
-                `'${file.name}' AS TABLE${files.findIndex(
-                  (innerFile) => file.name === innerFile.name
-                )} ON ${relationship_list
-                  .filter((relationship) =>
-                    relationship.includes(
-                      `TABLE${files.findIndex(
-                        (innerFile2) => file.name === innerFile2.name
-                      )}`
+            files[files.findIndex((file) => file.name === aggregation.table)]
+              .name,
+            aggregation.name
+          ) === "Utf8"
+            ? "VARCHAR"
+            : "DOUBLE"
+        })) AS "${aggregation.name}"
+            FROM '${files[0].name}' AS TABLE0
+            JOIN ${files
+              .slice(1)
+              .map(
+                (file) =>
+                  `'${file.name}' AS TABLE${files.findIndex(
+                    (innerFile) => file.name === innerFile.name
+                  )} ON ${relationship_list
+                    .filter((relationship) =>
+                      relationship.includes(
+                        `TABLE${files.findIndex(
+                          (innerFile2) => file.name === innerFile2.name
+                        )}`
+                      )
                     )
-                  )
-                  .join(" AND ")}`
-            )
-            .join(" JOIN ")}
-          ${
-            filters.length > 0
-              ? `WHERE ${filters
-                  .map(
-                    (filter) =>
-                      `TABLE${files.findIndex(
-                        (file) => file.name === filter.table
-                      )}."${filter.field}" IN (${filter.values
-                        .map((value) => `'${value}'`)
-                        .join(", ")})`
-                  )
-                  .join(" AND ")}`
-              : ""
-          }
-          GROUP BY ${all_fields_string_groupby}
-          `;
-    } else {
-      return `SELECT * FROM '${selectedPreviewFile}' LIMIT ${previewRows}`;
-    }
+                    .join(" AND ")}`
+              )
+              .join(" JOIN ")}
+            ${
+              filters.length > 0
+                ? `WHERE ${filters
+                    .map(
+                      (filter) =>
+                        `TABLE${files.findIndex(
+                          (file) => file.name === filter.table
+                        )}."${filter.field}" IN (${filter.values
+                          .map((value) => `'${value}'`)
+                          .join(", ")})`
+                    )
+                    .join(" AND ")}`
+                : ""
+            }
+            GROUP BY ${all_fields_string_groupby}
+            `;
+      } else {
+        return `SELECT * FROM '${selectedPreviewFile}' LIMIT ${previewRows}`;
+      }
+    };
+
+    const rawQuery = generateQuery();
+    return rawQuery ? format(rawQuery, { language: "sqlite" }) : null;
   })();
 
   const handleRunQuery = async () => {
