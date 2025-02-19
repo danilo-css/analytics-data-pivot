@@ -15,7 +15,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import {
   Table,
@@ -27,7 +27,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePivotStore } from "@/stores/usePivotStore";
-import { Table as Arrow } from "apache-arrow";
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,13 +36,17 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
+type FilterDialogProps = {
+  table: string;
+  field: string;
+  dateExtract?: "YEAR" | "MONTH" | "QUARTER";
+};
+
 export default function FilterDialog({
   table,
   field,
-}: {
-  table: string;
-  field: string;
-}) {
+  dateExtract,
+}: FilterDialogProps) {
   const { toast } = useToast();
   const { db, runQuery } = useDuckDBStore();
   const { filters, addFilter } = usePivotStore();
@@ -60,35 +63,54 @@ export default function FilterDialog({
   const itemsPerPage = 10;
 
   const fetchData = async () => {
-    if (db) {
-      setLoading(true);
-      const result: Arrow = await runQuery(
-        db,
-        `
-        SELECT DISTINCT "${field}"
-        FROM '${table}'
-        ORDER BY "${field}" ASC`
-      );
+    if (!db) return;
+    setLoading(true);
 
-      const cleanedData = result.toArray().map((row) => {
+    try {
+      let query;
+      // Extract the original field name if it's already a date-extracted field
+      const originalField = field.match(/^(YEAR|MONTH|QUARTER)\((.*?)\)$/);
+      const actualField = originalField ? originalField[2] : field;
+      const actualExtract = originalField ? originalField[1] : dateExtract;
+
+      if (actualExtract) {
+        query = `SELECT DISTINCT REPLACE(CAST(EXTRACT(${actualExtract} FROM CAST("${actualField}" AS DATE)) AS VARCHAR), '"', '') as value FROM '${table}' WHERE "${actualField}" IS NOT NULL ORDER BY value`;
+      } else {
+        query = `SELECT DISTINCT REPLACE("${actualField}", '"', '') as value FROM '${table}' WHERE "${actualField}" IS NOT NULL ORDER BY value`;
+      }
+      const result = await runQuery(db, query);
+
+      const values = result
+        .toArray()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const cleanedRow: any = {};
-        for (const [key, value] of Object.entries(row)) {
-          cleanedRow[key] =
-            typeof value === "string" ? value.replace(/"/g, "") : value;
-        }
-        return cleanedRow;
+        .map((row: { value: { toString: () => any } }) => row.value.toString());
+      setValues(values);
+    } catch (error) {
+      console.error("Error fetching filter options:", error);
+      toast({
+        title: "Error",
+        description:
+          "Failed to fetch filter values. Please make sure this is a proper date or text field.",
+        variant: "destructive",
       });
-
-      setValues(
-        cleanedData.map(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (obj: any) => obj[field]?.toString() ?? "(Null)"
-        )
-      );
+    } finally {
       setLoading(false);
     }
   };
+
+  // Remove the automatic fetching from useEffect since we now have a manual fetch button
+  useEffect(() => {
+    // Reset selected values when dialog opens
+    if (open) {
+      // Find the filter checking both regular and date-extracted field names
+      const existingFilter = filters.find(
+        (f) =>
+          f.table === table &&
+          (f.field === field || f.field === `${dateExtract}(${field})`)
+      );
+      setSelectedValues(existingFilter?.values || []);
+    }
+  }, [open, table, field, dateExtract, filters]);
 
   const filteredValues = values.filter((value) =>
     value.toString().toLowerCase().includes(searchQuery.toLowerCase())
@@ -108,7 +130,7 @@ export default function FilterDialog({
   };
 
   const handleSubmit = () => {
-    addFilter(table, field, selectedValues);
+    addFilter(table, field, selectedValues, dateExtract);
     toast({
       title: "Filter Applied",
       description: `Successfully applied filter for ${field}`,
@@ -138,7 +160,9 @@ export default function FilterDialog({
         <DialogHeader>
           <DialogTitle>Add filter</DialogTitle>
           <DialogDescription className="text-white">
-            Add filter for {field}
+            {dateExtract
+              ? `Filter by ${dateExtract.toLowerCase()}s from "${field}" in "${table}"`
+              : `Add filter for "${field}" from "${table}"`}
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col space-y-4">
