@@ -89,7 +89,8 @@ export default function FilterDialog({
       console.error("Error fetching filter options:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch filter values. Please try again.",
+        description:
+          "Failed to fetch filter values. Please make sure this is a proper date or text field.",
         variant: "destructive",
       });
     } finally {
