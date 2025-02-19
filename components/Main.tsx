@@ -169,35 +169,58 @@ export default function Main() {
         aggregation.name &&
         (rows.length > 0 || columns.length > 0)
       ) {
-        const fields = [...rows, ...columns];
+        const generateFieldExpression = (
+          field: (typeof rows)[0] | (typeof columns)[0]
+        ) => {
+          if (field.dateExtract) {
+            const originalField = field.name
+              .replace(`${field.dateExtract}(`, "")
+              .replace(")", "");
+            return `CAST(EXTRACT(${
+              field.dateExtract
+            } FROM CAST(TABLE${files.findIndex(
+              (file) => file.name === field.table
+            )}."${originalField}" AS DATE)) AS VARCHAR) AS "${field.name}"`;
+          }
+          return `CAST(TABLE${files.findIndex(
+            (file) => file.name === field.table
+          )}."${field.name}" AS ${
+            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+              ? "VARCHAR"
+              : "DOUBLE"
+          }) AS "${field.name}"`;
+        };
 
+        const generateGroupByExpression = (
+          field: (typeof rows)[0] | (typeof columns)[0]
+        ) => {
+          if (field.dateExtract) {
+            const originalField = field.name
+              .replace(`${field.dateExtract}(`, "")
+              .replace(")", "");
+            return `EXTRACT(${
+              field.dateExtract
+            } FROM CAST(TABLE${files.findIndex(
+              (file) => file.name === field.table
+            )}."${originalField}" AS DATE))`;
+          }
+          return `CAST(TABLE${files.findIndex(
+            (file) => file.name === field.table
+          )}."${field.name}" AS ${
+            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+              ? "VARCHAR"
+              : "DOUBLE"
+          })`;
+        };
+
+        const fields = [...rows, ...columns];
         const uniqueFields = [
           ...new Set(fields.map((field) => JSON.stringify(field))),
         ].map((str) => JSON.parse(str));
 
-        const all_fields_string = uniqueFields.map(
-          (field) =>
-            `CAST(TABLE${files.findIndex(
-              (file) => file.name === field.table
-            )}."${field.name}" AS ${
-              getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
-                ? "VARCHAR"
-                : "DOUBLE"
-            }) AS "${field.name}"`
-        );
-
+        const all_fields_string = uniqueFields.map(generateFieldExpression);
         const all_fields_string_groupby = uniqueFields
-          .map(
-            (field) =>
-              `CAST(TABLE${files.findIndex(
-                (file) => file.name === field.table
-              )}."${field.name}" AS ${
-                getTypeForColumn(queryFields, field.table, field.name) ===
-                "Utf8"
-                  ? "VARCHAR"
-                  : "DOUBLE"
-              })`
-          )
+          .map(generateGroupByExpression)
           .join(", ");
 
         const relationship_list = relationships.map((relationship) => {
