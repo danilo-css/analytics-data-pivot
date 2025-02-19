@@ -153,12 +153,21 @@ export default function Main() {
             ${
               filters.length > 0
                 ? `WHERE ${filters
-                    .map(
-                      (filter) =>
-                        `"${filter.field}" IN (${filter.values
+                    .map((filter) => {
+                      if (filter.dateExtract) {
+                        const originalField = filter.field
+                          .replace(`${filter.dateExtract}(`, "")
+                          .replace(")", "");
+                        return `CAST(EXTRACT(${
+                          filter.dateExtract
+                        } FROM CAST("${originalField}" AS DATE)) AS VARCHAR) IN (${filter.values
                           .map((value) => `'${value}'`)
-                          .join(", ")})`
-                    )
+                          .join(", ")})`;
+                      }
+                      return `"${filter.field}" IN (${filter.values
+                        .map((value) => `'${value}'`)
+                        .join(", ")})`;
+                    })
                     .join(" AND ")}`
                 : ""
             }
@@ -282,14 +291,25 @@ export default function Main() {
             ${
               filters.length > 0
                 ? `WHERE ${filters
-                    .map(
-                      (filter) =>
-                        `TABLE${files.findIndex(
+                    .map((filter) => {
+                      if (filter.dateExtract) {
+                        const originalField = filter.field
+                          .replace(`${filter.dateExtract}(`, "")
+                          .replace(")", "");
+                        return `CAST(EXTRACT(${
+                          filter.dateExtract
+                        } FROM CAST(TABLE${files.findIndex(
                           (file) => file.name === filter.table
-                        )}."${filter.field}" IN (${filter.values
+                        )}."${originalField}" AS DATE)) AS VARCHAR) IN (${filter.values
                           .map((value) => `'${value}'`)
-                          .join(", ")})`
-                    )
+                          .join(", ")})`;
+                      }
+                      return `TABLE${files.findIndex(
+                        (file) => file.name === filter.table
+                      )}."${filter.field}" IN (${filter.values
+                        .map((value) => `'${value}'`)
+                        .join(", ")})`;
+                    })
                     .join(" AND ")}`
                 : ""
             }

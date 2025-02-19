@@ -49,7 +49,10 @@ function DateOptionsDialog({ table, field }: { table: string; field: string }) {
           <h4 className="font-medium leading-none">Date Field Options</h4>
           <div className="flex flex-col gap-2">
             {options.map((opt) => (
-              <div key={opt.extract} className="flex gap-2">
+              <div
+                key={opt.extract}
+                className="flex justify-between items-center"
+              >
                 <span>{opt.label}</span>
                 <div className="flex gap-1">
                   <Rows3
@@ -61,6 +64,11 @@ function DateOptionsDialog({ table, field }: { table: string; field: string }) {
                     size={20}
                     className="cursor-pointer hover:text-black"
                     onClick={() => addColumn(table, field, opt.extract)}
+                  />
+                  <FilterDialog
+                    table={table}
+                    field={field}
+                    dateExtract={opt.extract}
                   />
                 </div>
               </div>
@@ -130,7 +138,7 @@ export default function FieldSelection() {
                               handleTypeChange(parentKey.name, index)
                             }
                             className="cursor-pointer hover:text-black"
-                            title="Current format: Text. Click to change to number."
+                            title="Current format: Text. Click to change to number or date."
                           />
                           <Rows3
                             size={20}

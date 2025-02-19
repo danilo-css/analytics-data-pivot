@@ -22,6 +22,7 @@ export type filterType = {
   table: string;
   field: string;
   values: string[];
+  dateExtract?: "YEAR" | "MONTH" | "QUARTER";
 };
 
 export type PivotState = {
@@ -54,7 +55,12 @@ export type PivotState = {
   clearAggregation: () => void;
   clearFileAggregation: (table?: string) => void;
   filters: filterType[];
-  addFilter: (table: string, field: string, values: string[]) => void;
+  addFilter: (
+    table: string,
+    field: string,
+    values: string[],
+    dateExtract?: "YEAR" | "MONTH" | "QUARTER"
+  ) => void;
   clearFilter: (table: string, field: string) => void;
   clearFilters: () => void;
   clearFileFilters: (table?: string) => void;
@@ -148,13 +154,17 @@ export const usePivotStore = create<PivotState>((set) => ({
         table && state.aggregation.table === table ? {} : state.aggregation,
     })),
   filters: [],
-  addFilter: (table, field, values) => {
+  addFilter: (table, field, values, dateExtract) => {
     set((state) => {
+      const fieldId = dateExtract ? `${dateExtract}(${field})` : field;
       const filteredFilters = state.filters.filter(
-        (f) => !(f.table === table && f.field === field)
+        (f) => !(f.table === table && f.field === fieldId)
       );
       return {
-        filters: [...filteredFilters, { table, field, values }],
+        filters: [
+          ...filteredFilters,
+          { table, field: fieldId, values, dateExtract },
+        ],
       };
     });
   },
