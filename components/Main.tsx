@@ -97,28 +97,47 @@ export default function Main() {
         aggregation.name &&
         (rows.length > 0 || columns.length > 0)
       ) {
-        const row_list = rows.map((row) => row.name);
-        const column_list = columns.map((column) => column.name);
-        const all_fields = [...new Set([...row_list, ...column_list])];
+        const generateFieldExpression = (
+          field: (typeof rows)[0] | (typeof columns)[0]
+        ) => {
+          if (field.dateExtract) {
+            // Extract the original field name by removing the dateExtract prefix
+            const originalField = field.name
+              .replace(`${field.dateExtract}(`, "")
+              .replace(")", "");
+            return `CAST(EXTRACT(${field.dateExtract} FROM CAST("${originalField}" AS DATE)) AS VARCHAR) AS "${field.name}"`;
+          }
+          return `CAST("${field.name}" AS ${
+            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+              ? "VARCHAR"
+              : "DOUBLE"
+          }) AS "${field.name}"`;
+        };
+
+        const generateGroupByExpression = (
+          field: (typeof rows)[0] | (typeof columns)[0]
+        ) => {
+          if (field.dateExtract) {
+            // Extract the original field name by removing the dateExtract prefix
+            const originalField = field.name
+              .replace(`${field.dateExtract}(`, "")
+              .replace(")", "");
+            return `EXTRACT(${field.dateExtract} FROM CAST("${originalField}" AS DATE))`;
+          }
+          return `CAST("${field.name}" AS ${
+            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+              ? "VARCHAR"
+              : "DOUBLE"
+          })`;
+        };
+
+        const all_fields = [...rows, ...columns];
         const all_fields_string = all_fields
-          .map(
-            (field) =>
-              `CAST("${field}" AS ${
-                getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
-                  ? "VARCHAR"
-                  : "DOUBLE"
-              }) AS "${field}"`
-          )
+          .map((field) => generateFieldExpression(field))
           .join(", ");
+
         const all_fields_string_groupby = all_fields
-          .map(
-            (field) =>
-              `CAST("${field}" AS ${
-                getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
-                  ? "VARCHAR"
-                  : "DOUBLE"
-              })`
-          )
+          .map((field) => generateGroupByExpression(field))
           .join(", ");
 
         return `
@@ -134,12 +153,21 @@ export default function Main() {
             ${
               filters.length > 0
                 ? `WHERE ${filters
-                    .map(
-                      (filter) =>
-                        `"${filter.field}" IN (${filter.values
+                    .map((filter) => {
+                      if (filter.dateExtract) {
+                        const originalField = filter.field
+                          .replace(`${filter.dateExtract}(`, "")
+                          .replace(")", "");
+                        return `CAST(EXTRACT(${
+                          filter.dateExtract
+                        } FROM CAST("${originalField}" AS DATE)) AS VARCHAR) IN (${filter.values
                           .map((value) => `'${value}'`)
-                          .join(", ")})`
-                    )
+                          .join(", ")})`;
+                      }
+                      return `"${filter.field}" IN (${filter.values
+                        .map((value) => `'${value}'`)
+                        .join(", ")})`;
+                    })
                     .join(" AND ")}`
                 : ""
             }
@@ -150,35 +178,58 @@ export default function Main() {
         aggregation.name &&
         (rows.length > 0 || columns.length > 0)
       ) {
-        const fields = [...rows, ...columns];
+        const generateFieldExpression = (
+          field: (typeof rows)[0] | (typeof columns)[0]
+        ) => {
+          if (field.dateExtract) {
+            const originalField = field.name
+              .replace(`${field.dateExtract}(`, "")
+              .replace(")", "");
+            return `CAST(EXTRACT(${
+              field.dateExtract
+            } FROM CAST(TABLE${files.findIndex(
+              (file) => file.name === field.table
+            )}."${originalField}" AS DATE)) AS VARCHAR) AS "${field.name}"`;
+          }
+          return `CAST(TABLE${files.findIndex(
+            (file) => file.name === field.table
+          )}."${field.name}" AS ${
+            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+              ? "VARCHAR"
+              : "DOUBLE"
+          }) AS "${field.name}"`;
+        };
 
+        const generateGroupByExpression = (
+          field: (typeof rows)[0] | (typeof columns)[0]
+        ) => {
+          if (field.dateExtract) {
+            const originalField = field.name
+              .replace(`${field.dateExtract}(`, "")
+              .replace(")", "");
+            return `EXTRACT(${
+              field.dateExtract
+            } FROM CAST(TABLE${files.findIndex(
+              (file) => file.name === field.table
+            )}."${originalField}" AS DATE))`;
+          }
+          return `CAST(TABLE${files.findIndex(
+            (file) => file.name === field.table
+          )}."${field.name}" AS ${
+            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+              ? "VARCHAR"
+              : "DOUBLE"
+          })`;
+        };
+
+        const fields = [...rows, ...columns];
         const uniqueFields = [
           ...new Set(fields.map((field) => JSON.stringify(field))),
         ].map((str) => JSON.parse(str));
 
-        const all_fields_string = uniqueFields.map(
-          (field) =>
-            `CAST(TABLE${files.findIndex(
-              (file) => file.name === field.table
-            )}."${field.name}" AS ${
-              getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
-                ? "VARCHAR"
-                : "DOUBLE"
-            }) AS "${field.name}"`
-        );
-
+        const all_fields_string = uniqueFields.map(generateFieldExpression);
         const all_fields_string_groupby = uniqueFields
-          .map(
-            (field) =>
-              `CAST(TABLE${files.findIndex(
-                (file) => file.name === field.table
-              )}."${field.name}" AS ${
-                getTypeForColumn(queryFields, field.table, field.name) ===
-                "Utf8"
-                  ? "VARCHAR"
-                  : "DOUBLE"
-              })`
-          )
+          .map(generateGroupByExpression)
           .join(", ");
 
         const relationship_list = relationships.map((relationship) => {
@@ -240,14 +291,25 @@ export default function Main() {
             ${
               filters.length > 0
                 ? `WHERE ${filters
-                    .map(
-                      (filter) =>
-                        `TABLE${files.findIndex(
+                    .map((filter) => {
+                      if (filter.dateExtract) {
+                        const originalField = filter.field
+                          .replace(`${filter.dateExtract}(`, "")
+                          .replace(")", "");
+                        return `CAST(EXTRACT(${
+                          filter.dateExtract
+                        } FROM CAST(TABLE${files.findIndex(
                           (file) => file.name === filter.table
-                        )}."${filter.field}" IN (${filter.values
+                        )}."${originalField}" AS DATE)) AS VARCHAR) IN (${filter.values
                           .map((value) => `'${value}'`)
-                          .join(", ")})`
-                    )
+                          .join(", ")})`;
+                      }
+                      return `TABLE${files.findIndex(
+                        (file) => file.name === filter.table
+                      )}."${filter.field}" IN (${filter.values
+                        .map((value) => `'${value}'`)
+                        .join(", ")})`;
+                    })
                     .join(" AND ")}`
                 : ""
             }
