@@ -11,10 +11,66 @@ import {
 import { Badge } from "./ui/badge";
 import { TbNumber123 } from "react-icons/tb";
 import { PiTextAaFill } from "react-icons/pi";
-import { Columns3, Database, Rows3, SquareSigma } from "lucide-react";
+import { Clock, Columns3, Database, Rows3, SquareSigma } from "lucide-react";
 import { useFileStore } from "@/stores/useFileStore";
 import { usePivotStore } from "@/stores/usePivotStore";
 import FilterDialog from "./FilterDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+
+function DateOptionsDialog({ table, field }: { table: string; field: string }) {
+  const { addRow, addColumn } = usePivotStore();
+
+  const options = [
+    { label: "Year", extract: "YEAR" },
+    { label: "Month", extract: "MONTH" },
+    { label: "Quarter", extract: "QUARTER" },
+  ] as const;
+
+  return (
+    <Dialog>
+      <DialogTrigger>
+        <Clock size={20} className="cursor-pointer hover:text-black" />
+      </DialogTrigger>
+      <DialogContent className="bg-gray-700 max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Date parsing</DialogTitle>
+          <DialogDescription className="text-white">
+            Date parse {field} from {table}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4 p-4">
+          <h4 className="font-medium leading-none">Date Field Options</h4>
+          <div className="flex flex-col gap-2">
+            {options.map((opt) => (
+              <div key={opt.extract} className="flex gap-2">
+                <span>{opt.label}</span>
+                <div className="flex gap-1">
+                  <Rows3
+                    size={20}
+                    className="cursor-pointer hover:text-black"
+                    onClick={() => addRow(table, field, opt.extract)}
+                  />
+                  <Columns3
+                    size={20}
+                    className="cursor-pointer hover:text-black"
+                    onClick={() => addColumn(table, field, opt.extract)}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function FieldSelection() {
   const { queryFields, setQueryFields, isLoadingFields } = useTableStore();
@@ -100,6 +156,10 @@ export default function FieldSelection() {
                             }
                             title="Current format: Number. Click to change to text."
                             className="cursor-pointer hover:text-black"
+                          />
+                          <DateOptionsDialog
+                            table={parentKey.name}
+                            field={item.name}
                           />
                           <SquareSigma
                             size={20}

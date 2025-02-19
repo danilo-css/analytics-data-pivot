@@ -97,28 +97,47 @@ export default function Main() {
         aggregation.name &&
         (rows.length > 0 || columns.length > 0)
       ) {
-        const row_list = rows.map((row) => row.name);
-        const column_list = columns.map((column) => column.name);
-        const all_fields = [...new Set([...row_list, ...column_list])];
+        const generateFieldExpression = (
+          field: (typeof rows)[0] | (typeof columns)[0]
+        ) => {
+          if (field.dateExtract) {
+            // Extract the original field name by removing the dateExtract prefix
+            const originalField = field.name
+              .replace(`${field.dateExtract}(`, "")
+              .replace(")", "");
+            return `CAST(EXTRACT(${field.dateExtract} FROM CAST("${originalField}" AS DATE)) AS VARCHAR) AS "${field.name}"`;
+          }
+          return `CAST("${field.name}" AS ${
+            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+              ? "VARCHAR"
+              : "DOUBLE"
+          }) AS "${field.name}"`;
+        };
+
+        const generateGroupByExpression = (
+          field: (typeof rows)[0] | (typeof columns)[0]
+        ) => {
+          if (field.dateExtract) {
+            // Extract the original field name by removing the dateExtract prefix
+            const originalField = field.name
+              .replace(`${field.dateExtract}(`, "")
+              .replace(")", "");
+            return `EXTRACT(${field.dateExtract} FROM CAST("${originalField}" AS DATE))`;
+          }
+          return `CAST("${field.name}" AS ${
+            getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
+              ? "VARCHAR"
+              : "DOUBLE"
+          })`;
+        };
+
+        const all_fields = [...rows, ...columns];
         const all_fields_string = all_fields
-          .map(
-            (field) =>
-              `CAST("${field}" AS ${
-                getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
-                  ? "VARCHAR"
-                  : "DOUBLE"
-              }) AS "${field}"`
-          )
+          .map((field) => generateFieldExpression(field))
           .join(", ");
+
         const all_fields_string_groupby = all_fields
-          .map(
-            (field) =>
-              `CAST("${field}" AS ${
-                getTypeForColumn(queryFields, files[0].name, field) === "Utf8"
-                  ? "VARCHAR"
-                  : "DOUBLE"
-              })`
-          )
+          .map((field) => generateGroupByExpression(field))
           .join(", ");
 
         return `
