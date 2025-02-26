@@ -42,7 +42,7 @@ function DateOptionsDialog({ table, field }: { table: string; field: string }) {
         <DialogHeader>
           <DialogTitle>Date parsing</DialogTitle>
           <DialogDescription className="text-white">
-            Date parse {field} from {table}
+            {`Date parse "${field}" from "${table}". Do notice the field has to be on the format YYYY-MM-DD.`}
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 p-4">
