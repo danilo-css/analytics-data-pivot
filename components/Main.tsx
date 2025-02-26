@@ -10,7 +10,7 @@ import { usePyodideStore } from "@/stores/usePyodideStore";
 import { useTableStore } from "@/stores/useTableStore";
 import FieldSelection from "./FieldSelection";
 import PivotFields from "./PivotFields";
-import { Copy, Play } from "lucide-react";
+import { Copy, Play, Loader2 } from "lucide-react";
 import { usePivotStore } from "@/stores/usePivotStore";
 import { getTypeForColumn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -530,7 +530,11 @@ export default function Main() {
                         handleRunQuery();
                       }}
                     >
-                      <Play size={20} />
+                      {isQueryRunning ? (
+                        <Loader2 size={20} className="animate-spin" />
+                      ) : (
+                        <Play size={20} />
+                      )}
                       <p>{isQueryRunning ? "Running..." : "Run query"}</p>
                     </Button>
                     {result && (
