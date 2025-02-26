@@ -10,7 +10,7 @@ import { usePyodideStore } from "@/stores/usePyodideStore";
 import { useTableStore } from "@/stores/useTableStore";
 import FieldSelection from "./FieldSelection";
 import PivotFields from "./PivotFields";
-import { Copy, Play } from "lucide-react";
+import { Copy, Play, Loader2 } from "lucide-react";
 import { usePivotStore } from "@/stores/usePivotStore";
 import { getTypeForColumn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -342,7 +342,14 @@ export default function Main() {
       });
       handleRunPyodide(cleanedData);
     } catch (error) {
-      console.error("Query execution error:", error);
+      toast({
+        title: "Query Execution Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unknown error occurred while running the query",
+        variant: "destructive",
+      });
     } finally {
       setIsQueryRunning(false);
     }
@@ -530,7 +537,11 @@ export default function Main() {
                         handleRunQuery();
                       }}
                     >
-                      <Play size={20} />
+                      {isQueryRunning ? (
+                        <Loader2 size={20} className="animate-spin" />
+                      ) : (
+                        <Play size={20} />
+                      )}
                       <p>{isQueryRunning ? "Running..." : "Run query"}</p>
                     </Button>
                     {result && (
