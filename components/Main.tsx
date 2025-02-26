@@ -342,7 +342,14 @@ export default function Main() {
       });
       handleRunPyodide(cleanedData);
     } catch (error) {
-      console.error("Query execution error:", error);
+      toast({
+        title: "Query Execution Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unknown error occurred while running the query",
+        variant: "destructive",
+      });
     } finally {
       setIsQueryRunning(false);
     }
