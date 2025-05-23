@@ -29,7 +29,11 @@ export default function PivotFilters() {
                 </span>
               </div>
               <div>{filter.field}</div>
-              <FilterDialog table={filter.table} field={filter.field} />
+              <FilterDialog
+                table={filter.table}
+                field={filter.field}
+                dateExtract={filter.dateExtract}
+              />
               <Trash2
                 className="cursor-pointer hover:text-black"
                 size={20}

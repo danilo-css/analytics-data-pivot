@@ -101,11 +101,15 @@ export default function Main() {
           field: (typeof rows)[0] | (typeof columns)[0]
         ) => {
           if (field.dateExtract) {
-            // Extract the original field name by removing the dateExtract prefix
             const originalField = field.name
               .replace(`${field.dateExtract}(`, "")
               .replace(")", "");
-            return `CAST(EXTRACT(${field.dateExtract} FROM CAST("${originalField}" AS DATE)) AS VARCHAR) AS "${field.name}"`;
+            const extractExpr = `EXTRACT(${field.dateExtract} FROM CAST("${originalField}" AS DATE))`;
+            return field.dateExtract === "MONTH"
+              ? `LPAD(CAST(${extractExpr} AS VARCHAR), 2, '0') AS "${field.name}"`
+              : field.dateExtract === "QUARTER"
+              ? `CONCAT('Q', CAST(${extractExpr} AS VARCHAR)) AS "${field.name}"`
+              : `CAST(${extractExpr} AS VARCHAR) AS "${field.name}"`;
           }
           return `CAST("${field.name}" AS ${
             getTypeForColumn(queryFields, field.table, field.name) === "Utf8"
@@ -118,7 +122,6 @@ export default function Main() {
           field: (typeof rows)[0] | (typeof columns)[0]
         ) => {
           if (field.dateExtract) {
-            // Extract the original field name by removing the dateExtract prefix
             const originalField = field.name
               .replace(`${field.dateExtract}(`, "")
               .replace(")", "");
@@ -158,9 +161,14 @@ export default function Main() {
                         const originalField = filter.field
                           .replace(`${filter.dateExtract}(`, "")
                           .replace(")", "");
-                        return `CAST(EXTRACT(${
-                          filter.dateExtract
-                        } FROM CAST("${originalField}" AS DATE)) AS VARCHAR) IN (${filter.values
+                        const extractExpr = `EXTRACT(${filter.dateExtract} FROM CAST("${originalField}" AS DATE))`;
+                        const filterExpr =
+                          filter.dateExtract === "MONTH"
+                            ? `LPAD(CAST(${extractExpr} AS VARCHAR), 2, '0')`
+                            : filter.dateExtract === "QUARTER"
+                            ? `CONCAT('Q', CAST(${extractExpr} AS VARCHAR))`
+                            : `CAST(${extractExpr} AS VARCHAR)`;
+                        return `${filterExpr} IN (${filter.values
                           .map((value) => `'${value}'`)
                           .join(", ")})`;
                       }
@@ -185,11 +193,15 @@ export default function Main() {
             const originalField = field.name
               .replace(`${field.dateExtract}(`, "")
               .replace(")", "");
-            return `CAST(EXTRACT(${
-              field.dateExtract
-            } FROM CAST(TABLE${files.findIndex(
+            const tablePrefix = `TABLE${files.findIndex(
               (file) => file.name === field.table
-            )}."${originalField}" AS DATE)) AS VARCHAR) AS "${field.name}"`;
+            )}`;
+            const extractExpr = `EXTRACT(${field.dateExtract} FROM CAST(${tablePrefix}."${originalField}" AS DATE))`;
+            return field.dateExtract === "MONTH"
+              ? `LPAD(CAST(${extractExpr} AS VARCHAR), 2, '0') AS "${field.name}"`
+              : field.dateExtract === "QUARTER"
+              ? `CONCAT('Q', CAST(${extractExpr} AS VARCHAR)) AS "${field.name}"`
+              : `CAST(${extractExpr} AS VARCHAR) AS "${field.name}"`;
           }
           return `CAST(TABLE${files.findIndex(
             (file) => file.name === field.table
@@ -292,21 +304,29 @@ export default function Main() {
               filters.length > 0
                 ? `WHERE ${filters
                     .map((filter) => {
+                      const tablePrefix = `TABLE${files.findIndex(
+                        (file) => file.name === filter.table
+                      )}`;
                       if (filter.dateExtract) {
+                        // Extract original field name from the date extract expression
                         const originalField = filter.field
                           .replace(`${filter.dateExtract}(`, "")
                           .replace(")", "");
-                        return `CAST(EXTRACT(${
-                          filter.dateExtract
-                        } FROM CAST(TABLE${files.findIndex(
-                          (file) => file.name === filter.table
-                        )}."${originalField}" AS DATE)) AS VARCHAR) IN (${filter.values
+                        const extractExpr = `EXTRACT(${filter.dateExtract} FROM CAST(${tablePrefix}."${originalField}" AS DATE))`;
+                        const filterExpr =
+                          filter.dateExtract === "MONTH"
+                            ? `LPAD(CAST(${extractExpr} AS VARCHAR), 2, '0')`
+                            : filter.dateExtract === "QUARTER"
+                            ? `CONCAT('Q', CAST(${extractExpr} AS VARCHAR))`
+                            : `CAST(${extractExpr} AS VARCHAR)`;
+                        return `${filterExpr} IN (${filter.values
                           .map((value) => `'${value}'`)
                           .join(", ")})`;
                       }
-                      return `TABLE${files.findIndex(
-                        (file) => file.name === filter.table
-                      )}."${filter.field}" IN (${filter.values
+                      // For non-date fields, use the original field name
+                      return `${tablePrefix}."${
+                        filter.field
+                      }" IN (${filter.values
                         .map((value) => `'${value}'`)
                         .join(", ")})`;
                     })
@@ -321,7 +341,7 @@ export default function Main() {
     };
 
     const rawQuery = generateQuery();
-    return rawQuery ? format(rawQuery, { language: "sqlite" }) : null;
+    return rawQuery ? format(rawQuery, { language: "duckdb" }) : null;
   })();
 
   const handleRunQuery = async () => {
@@ -363,7 +383,7 @@ export default function Main() {
 
     try {
       const excelBytes = pyodide.FS.readFile("/excel_output.xlsx");
-      const blob = new Blob([excelBytes], {
+      const blob = new Blob([Buffer.from(excelBytes)], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const url = URL.createObjectURL(blob);
