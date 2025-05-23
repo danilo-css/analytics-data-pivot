@@ -341,8 +341,7 @@ export default function Main() {
     };
 
     const rawQuery = generateQuery();
-    console.log(filters);
-    return rawQuery ? format(rawQuery, { language: "sqlite" }) : null;
+    return rawQuery ? format(rawQuery, { language: "duckdb" }) : null;
   })();
 
   const handleRunQuery = async () => {
