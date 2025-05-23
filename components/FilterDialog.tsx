@@ -74,7 +74,13 @@ export default function FilterDialog({
       const actualExtract = originalField ? originalField[1] : dateExtract;
 
       if (actualExtract) {
-        query = `SELECT DISTINCT REPLACE(CAST(EXTRACT(${actualExtract} FROM CAST("${actualField}" AS DATE)) AS VARCHAR), '"', '') as value FROM '${table}' WHERE "${actualField}" IS NOT NULL ORDER BY value`;
+        if (actualExtract === "MONTH") {
+          query = `SELECT DISTINCT LPAD(CAST(EXTRACT(${actualExtract} FROM CAST("${actualField}" AS DATE)) AS VARCHAR), 2, '0') as value FROM '${table}' WHERE "${actualField}" IS NOT NULL ORDER BY value`;
+        } else if (actualExtract === "QUARTER") {
+          query = `SELECT DISTINCT 'Q' || CAST(EXTRACT(${actualExtract} FROM CAST("${actualField}" AS DATE)) AS VARCHAR) as value FROM '${table}' WHERE "${actualField}" IS NOT NULL ORDER BY value`;
+        } else {
+          query = `SELECT DISTINCT CAST(EXTRACT(${actualExtract} FROM CAST("${actualField}" AS DATE)) AS VARCHAR) as value FROM '${table}' WHERE "${actualField}" IS NOT NULL ORDER BY value`;
+        }
       } else {
         query = `SELECT DISTINCT REPLACE("${actualField}", '"', '') as value FROM '${table}' WHERE "${actualField}" IS NOT NULL ORDER BY value`;
       }
@@ -130,10 +136,17 @@ export default function FilterDialog({
   };
 
   const handleSubmit = () => {
-    addFilter(table, field, selectedValues, dateExtract);
+    // Extract the original field name if it's already a date-extracted field
+    const originalField = field.match(/^(YEAR|MONTH|QUARTER)\((.*?)\)$/);
+    const actualField = originalField ? originalField[2] : field;
+    const actualExtract = originalField
+      ? (originalField[1] as "YEAR" | "MONTH" | "QUARTER")
+      : dateExtract;
+
+    addFilter(table, actualField, selectedValues, actualExtract);
     toast({
       title: "Filter Applied",
-      description: `Successfully applied filter for ${field}`,
+      description: `Successfully applied filter for ${actualField}`,
     });
   };
 
