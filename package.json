@@ -24,7 +24,7 @@
     "clsx": "^2.1.1",
     "duckdb-wasm-kit": "^0.1.39",
     "lucide-react": "^0.532.0",
-    "next": "^15.4.4",
+    "next": "15.4.8",
     "pyodide": "^0.27.7",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
